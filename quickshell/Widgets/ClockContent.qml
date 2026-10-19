@@ -19,6 +19,64 @@ Item {
     property bool segmented: false
     property var locale: I18n.locale()
     property date date: systemClock.date
+    // agartha: a ClockTimeOverlay to draw the ticking time on a surface of its own (a clock in the frame, whose one
+    // full-screen surface redraws whole), while detachWanted (the owner says when the clock is at rest). The two surfaces
+    // can't change in the same frame, so a handover always overlaps instead of leaving a gap: the overlay starts
+    // drawing, then the placeholder here goes unseen; back, the time here shows, then the overlay stops.
+    property var timeHost: null
+    property bool detachWanted: true
+    readonly property bool hostReady: !!timeHost && timeHost.clock === root && timeHost.shown && detachWanted && !vertical && showTime
+    property bool overlayDraws: false
+    property bool timeDetached: false
+    readonly property bool windowShown: Window.window?.visible ?? false
+    onHostReadyChanged: root.syncDetached()
+    onTimeHostChanged: root.claimTimeHost()
+    Component.onCompleted: {
+        root.claimTimeHost();
+        root.syncDetached();
+    }
+    Component.onDestruction: {
+        if (root.timeHost?.clock === root)
+            root.timeHost.clock = null;
+    }
+    function claimTimeHost() {
+        if (root.timeHost)
+            root.timeHost.clock = root;
+    }
+    function syncDetached() {
+        if (root.hostReady) {
+            attachDelay.stop();
+            // once its place has settled (a face just laid out may still move)
+            if (!root.overlayDraws)
+                detachDelay.restart();
+            return;
+        }
+        detachDelay.stop();
+        hideDelay.stop();
+        root.timeDetached = false;
+        if (root.overlayDraws)
+            attachDelay.restart();
+    }
+    Timer {
+        id: detachDelay
+        interval: 120
+        onTriggered: {
+            root.overlayDraws = true;
+            hideDelay.restart();
+        }
+    }
+    Timer {
+        id: hideDelay
+        interval: 40
+        onTriggered: root.timeDetached = root.hostReady
+    }
+    Timer {
+        id: attachDelay
+        interval: 40
+        onTriggered: root.overlayDraws = false
+    }
+    // the time's line, for drawing it in the same place elsewhere
+    readonly property Item timeItem: (root.dateFirst ? lastLoader.item : firstLoader.item) ?? null
 
     readonly property string timeText: date.toLocaleTimeString(locale, SettingsData.getEffectiveTimeFormat())
     readonly property string dateText: date.toLocaleDateString(locale, SettingsData.getEffectiveDateFormat())
@@ -58,6 +116,10 @@ Item {
 
         property var lines: []
         property color color: root.textColor
+        // the time keeps a slot as wide as its widest reading, so nothing after it moves as it ticks
+        property bool steady: false
+        // drawn elsewhere: these lines are the slot itself, unchanging and unseen
+        property bool detached: false
 
         width: root.vertical ? root.availableWidth : implicitWidth
 
@@ -65,15 +127,43 @@ Item {
             model: stack.lines.length
 
             NumericText {
+                id: line
+
                 required property int index
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: stack.lines[index]
-                reserveText: text.replace(/\d/g, "0")
-                width: Math.ceil(reservedWidth)
-                horizontalAlignment: Text.AlignHCenter
+                // in a row (the bar), figures are proportional: tabular ones leave a lone 1 in a digit-wide box
+                // ("1 1:4 1"). the slot is the time with every digit its widest, and the time sits at its start, so the
+                // hours stay put and only its end moves a pixel as the seconds tick
+                readonly property bool proportional: !root.vertical
+                anchors.horizontalCenter: proportional ? undefined : parent.horizontalCenter
+                readonly property string lineText: stack.lines[index]
+                text: stack.detached ? lineText.replace(/\d/g, widestDigit) : lineText
+                // unseen by colour, not opacity: opacity fades (StyledText), and the time has to be back the moment it's
+                // drawn here again
+                reserveText: lineText.replace(/\d/g, "0")
+                width: proportional ? (stack.steady ? Math.ceil(Math.max(implicitWidth, widestSlot.width)) : Math.ceil(implicitWidth)) : Math.ceil(reservedWidth)
+                horizontalAlignment: proportional ? Text.AlignLeft : Text.AlignHCenter
                 isMonospace: false
-                color: stack.color
+                color: stack.detached ? "transparent" : stack.color
                 font.pixelSize: root.fontSize
+                font.features: proportional ? ({ "tnum": 0 }) : ({ "tnum": 1 })
+
+                FontMetrics {
+                    id: digitMetrics
+                    font: line.font
+                }
+                readonly property string widestDigit: {
+                    let best = "0";
+                    for (const digit of "0123456789") {
+                        if (digitMetrics.advanceWidth(digit) > digitMetrics.advanceWidth(best))
+                            best = digit;
+                    }
+                    return best;
+                }
+                TextMetrics {
+                    id: widestSlot
+                    font: line.font
+                    text: line.lineText.replace(/\d/g, line.widestDigit)
+                }
             }
         }
     }
@@ -86,6 +176,7 @@ Item {
         spacing: root.vertical ? 0 : Theme.spacingS
 
         Loader {
+            id: firstLoader
             sourceComponent: root.dateFirst && root.showDate || !root.showTime ? dateComponent : timeComponent
         }
 
@@ -114,6 +205,7 @@ Item {
         }
 
         Loader {
+            id: lastLoader
             active: root.showTime && root.showDate
             visible: active
             sourceComponent: root.dateFirst ? timeComponent : dateComponent
@@ -125,6 +217,8 @@ Item {
 
         StackedLines {
             lines: root.timeLines
+            steady: true
+            detached: root.timeDetached
         }
     }
 
