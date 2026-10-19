@@ -18,11 +18,16 @@ CcTile {
 
     iconName: profileMode ? Theme.getPowerProfileIcon(PowerProfileWatcher.currentProfile) : BatteryService.getBatteryIcon()
     title: {
+        // one line: the profile, or the charge (the icon says which, and whether it's charging)
+        if (SettingsData.minimalInfo)
+            return profileMode ? Theme.getPowerProfileLabel(PowerProfileWatcher.currentProfile) : available ? `${BatteryService.batteryLevel}%` : I18n.tr("No battery");
         if (profileMode)
             return I18n.tr("Power profile");
         return available ? I18n.tr("Battery") : I18n.tr("No battery");
     }
     subtitle: {
+        if (SettingsData.minimalInfo)
+            return "";
         if (profileMode)
             return Theme.getPowerProfileLabel(PowerProfileWatcher.currentProfile);
         if (!available)

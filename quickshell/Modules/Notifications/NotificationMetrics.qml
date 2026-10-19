@@ -21,7 +21,7 @@ Singleton {
     readonly property real contentSpacing: compact ? Theme.spacingXXS : Theme.notificationContentSpacing
     readonly property real popupRadius: Theme.windowRadius
     readonly property real menuRadius: Theme.cornerRadiusM
-    readonly property real popupWidth: 400
+    readonly property real popupWidth: Theme.compactDensity ? 340 : 400
     readonly property real popupMinWidth: 320
     readonly property real popupScreenRatio: 0.23
     readonly property real menuWidth: 280

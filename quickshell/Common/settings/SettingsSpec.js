@@ -970,6 +970,27 @@ var LOCAL_SPEC = {
     notepadFontSize: {
         def: 14
     },
+    typeScale: {
+        def: "material"
+    },
+    density: {
+        def: "comfortable"
+    },
+    controlCenterPagesInPlace: {
+        def: false
+    },
+    surfaceTint: {
+        def: false
+    },
+    frameSurfacesFromTop: {
+        def: false
+    },
+    frameOnDemand: {
+        def: false
+    },
+    minimalInfo: {
+        def: false
+    },
     notificationSummaryFontSize: {
         def: 0
     },

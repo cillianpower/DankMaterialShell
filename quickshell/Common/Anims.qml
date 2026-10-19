@@ -27,8 +27,12 @@ Singleton {
     readonly property var standardDecel: [0.00, 0.00, 0.00, 1.00, 1.00, 1.00]
     readonly property var standardAccel: [0.30, 0.00, 1.00, 1.00, 1.00, 1.00]
 
+    // Smooth motion (springBounce 0): a curve fitted to a critically damped spring, which never passes its target.
+    readonly property bool smoothMotion: typeof SettingsData !== "undefined" && Math.round(SettingsData.springBounce) === 0
+    readonly property var smoothSpatial: [0.3, 0.55, 0.05, 1, 1, 1]
+
     // Used by AnimVariants for variant/effect logic
-    readonly property var expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1, 1, 1]
-    readonly property var expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
+    readonly property var expressiveDefaultSpatial: smoothMotion ? smoothSpatial : [0.38, 1.21, 0.22, 1, 1, 1]
+    readonly property var expressiveFastSpatial: smoothMotion ? smoothSpatial : [0.42, 1.67, 0.21, 0.9, 1, 1]
     readonly property var expressiveEffects: [0.34, 0.8, 0.34, 1, 1, 1]
 }

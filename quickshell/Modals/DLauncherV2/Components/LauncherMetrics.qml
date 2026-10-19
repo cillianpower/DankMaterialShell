@@ -5,7 +5,8 @@ import Quickshell
 import qs.Common
 
 Singleton {
-    readonly property real rowHeight: Theme.listItemHeight
+    // its rows carry two lines, so compact gives them the two-line height
+    readonly property real rowHeight: Theme.compactDensity ? Theme.listItemTwoLineHeight : Theme.listItemHeight
     readonly property real rowPadding: Theme.spacingL
     readonly property real rowGap: Theme.groupedListGap
     readonly property real tileSize: Theme.launcherTileSize

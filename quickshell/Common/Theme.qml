@@ -514,7 +514,20 @@ Singleton {
         return accents[name] ?? null;
     }
 
+    // surface tint: over blur, a section on a surface is the text colour at a low alpha, so the blur shows through,
+    // instead of an opaque grey. deeper roles (chips, nested chips) tint a little more.
+    readonly property bool surfaceTintActive: typeof SettingsData !== "undefined" && (SettingsData.surfaceTint ?? false) && blurLayersActive
+    function surfaceTintFor(baseColor) {
+        if (Qt.colorEqual(baseColor, chipSurfaceNested))
+            return withAlpha(surfaceText, 0.12);
+        if (Qt.colorEqual(baseColor, chipSurface))
+            return withAlpha(surfaceText, 0.09);
+        return withAlpha(surfaceText, 0.06);
+    }
+
     function foregroundColor(baseColor, floatingWindow = false) {
+        if (surfaceTintActive)
+            return surfaceTintFor(baseColor);
         return blendAlpha(baseColor, floatingWindow ? floatingWindowForegroundAlpha : foregroundAlpha);
     }
 
@@ -531,9 +544,9 @@ Singleton {
     readonly property real layerOutlineOpacity: blurLayerOutlineOpacity
     readonly property int layerOutlineWidth: layerOutlineOpacity > 0 ? 1 : 0
     readonly property real floatingWindowFieldAlpha: floatingWindowForegroundAlpha
-    readonly property color floatingWindowFieldColor: withAlpha(chipSurface, floatingWindowFieldAlpha)
+    readonly property color floatingWindowFieldColor: surfaceTintActive ? surfaceTintFor(chipSurface) : withAlpha(chipSurface, floatingWindowFieldAlpha)
     readonly property real popupFieldAlpha: foregroundAlpha
-    readonly property color popupFieldColor: withAlpha(chipSurface, popupFieldAlpha)
+    readonly property color popupFieldColor: surfaceTintActive ? surfaceTintFor(chipSurface) : withAlpha(chipSurface, popupFieldAlpha)
     readonly property color popupFieldBorderColor: withAlpha(outline, blurLayersActive ? 0.16 : layerOutlineOpacity)
     readonly property color popupFieldFocusedBorderColor: withAlpha(primary, blurLayersActive ? 0.72 : 1.0)
     readonly property color floatingWindowFieldBorderColor: popupFieldBorderColor
@@ -669,8 +682,8 @@ Singleton {
         }
     }
 
-    readonly property color ccPillInactiveBg: transparentBlurLayers ? withAlpha(cardSurface, 0.08) : nestedSurface
-    readonly property color ccIconBoxInactiveBg: transparentBlurLayers ? withAlpha(chipSurfaceNested, 0.16) : foregroundColor(chipSurfaceNested)
+    readonly property color ccPillInactiveBg: surfaceTintActive ? surfaceTintFor(cardSurface) : transparentBlurLayers ? withAlpha(cardSurface, 0.08) : nestedSurface
+    readonly property color ccIconBoxInactiveBg: surfaceTintActive ? surfaceTintFor(chipSurfaceNested) : transparentBlurLayers ? withAlpha(chipSurfaceNested, 0.16) : foregroundColor(chipSurfaceNested)
 
     readonly property color ccTileActiveText: {
         switch (SettingsData.controlCenterTileColorMode) {
@@ -979,9 +992,9 @@ Singleton {
         "standard": [0.2, 0, 0, 1, 1, 1],
         "standardAccel": [0.3, 0, 1, 1, 1, 1],
         "standardDecel": [0, 0, 0, 1, 1, 1],
-        "expressiveFastSpatial": [0.42, 1.67, 0.21, 0.9, 1, 1],
-        "expressiveDefaultSpatial": [0.38, 1.21, 0.22, 1, 1, 1],
-        "expressiveSlowSpatial": [0.39, 1.29, 0.35, 0.98, 1, 1],
+        "expressiveFastSpatial": Anims.smoothMotion ? Anims.smoothSpatial : [0.42, 1.67, 0.21, 0.9, 1, 1],
+        "expressiveDefaultSpatial": Anims.smoothMotion ? Anims.smoothSpatial : [0.38, 1.21, 0.22, 1, 1, 1],
+        "expressiveSlowSpatial": Anims.smoothMotion ? Anims.smoothSpatial : [0.39, 1.29, 0.35, 0.98, 1, 1],
         "expressiveFastEffects": [0.31, 0.94, 0.34, 1, 1, 1],
         "expressiveEffects": [0.34, 0.8, 0.34, 1, 1, 1],
         "expressiveSlowEffects": [0.34, 0.88, 0.34, 1, 1, 1]
@@ -1087,9 +1100,11 @@ Singleton {
     function tunedSpring(spec, baseDuration) {
         const f = Math.max(0.05, baseDuration / 500);
         const bounce = typeof SettingsData !== "undefined" && SettingsData.springBounce >= 0 && SettingsData.springBounce < springDampingScales.length ? springDampingScales[Math.round(SettingsData.springBounce)] : 1;
+        const stiffness = spec[0] / (f * f);
+        // smooth is critically damped: as fast as a spring settles without passing its target
         return {
-            "stiffness": spec[0] / (f * f),
-            "damping": spec[1] / f * bounce,
+            "stiffness": stiffness,
+            "damping": Anims.smoothMotion ? 2 * Math.sqrt(stiffness) : spec[1] / f * bounce,
             "mass": 1
         };
     }
@@ -1251,34 +1266,39 @@ Singleton {
     property real spacingL: 16
     property real spacingXL: 24
     readonly property real windowInset: spacingM
-    property real fontSizeSmall: Math.round(fontScale * 12)
-    property real fontSizeMedium: Math.round(fontScale * 14)
-    property real fontSizeLarge: Math.round(fontScale * 16)
-    property real fontSizeXLarge: Math.round(fontScale * 20)
-    property real fontSizeXXLarge: Math.round(fontScale * 28)
-    property real fontSizeDisplay: Math.round(fontScale * 36)
+    // "macos": macOS's built-in text styles (subheadline 11, body 13, title 3 15, title 2 17, title 1 22,
+    // large title 26), and each icon size equal to a text size, so a symbol drawn at cap height matches its text.
+    readonly property bool macosTypeScale: typeof SettingsData !== "undefined" && SettingsData.typeScale === "macos"
+    property real fontSizeSmall: Math.round(fontScale * (macosTypeScale ? 11 : 12))
+    property real fontSizeMedium: Math.round(fontScale * (macosTypeScale ? 13 : 14))
+    property real fontSizeLarge: Math.round(fontScale * (macosTypeScale ? 15 : 16))
+    property real fontSizeXLarge: Math.round(fontScale * (macosTypeScale ? 17 : 20))
+    property real fontSizeXXLarge: Math.round(fontScale * (macosTypeScale ? 22 : 28))
+    property real fontSizeDisplay: Math.round(fontScale * (macosTypeScale ? 26 : 36))
     property real fontSizeDisplayLarge: Math.round(fontScale * 57)
     property real barHeight: 48
-    property real iconSize: 24
-    property real iconSizeSmall: 16
-    property real iconSizeLarge: 32
-    readonly property real iconSizeMedium: 20
+    property real iconSize: macosTypeScale ? fontSizeXLarge : 24
+    property real iconSizeSmall: macosTypeScale ? fontSizeMedium : 16
+    property real iconSizeLarge: macosTypeScale ? fontSizeXXLarge : 32
+    readonly property real iconSizeMedium: macosTypeScale ? fontSizeLarge : 20
     readonly property int smallBreakpoint: 480
     readonly property int mediumBreakpoint: 768
-    readonly property real iconButtonSize: 40
-    readonly property real minimumTouchTargetSize: 48
-    readonly property real listItemHeight: 56
-    readonly property real listItemTwoLineHeight: 72
-    readonly property real avatarSize: 36
-    readonly property real sliderTrackHeight: 16
+    // "compact": controls sized for a pointer, not a finger
+    readonly property bool compactDensity: typeof SettingsData !== "undefined" && SettingsData.density === "compact"
+    readonly property real iconButtonSize: compactDensity ? 24 : 40
+    readonly property real minimumTouchTargetSize: compactDensity ? 28 : 48
+    readonly property real listItemHeight: compactDensity ? 32 : 56
+    readonly property real listItemTwoLineHeight: compactDensity ? 40 : 72
+    readonly property real avatarSize: compactDensity ? 28 : 36
+    readonly property real sliderTrackHeight: compactDensity ? 10 : 16
     readonly property real sliderHandleWidth: 4
     readonly property real sliderHandleWidthPressed: 2
-    readonly property real sliderHandleHeight: 28
-    readonly property real sliderHandleGap: 6
-    readonly property real sliderTrackHeightS: 24
-    readonly property real sliderHandleHeightS: 36
-    readonly property real sliderTrackHeightM: 40
-    readonly property real sliderHandleHeightM: 52
+    readonly property real sliderHandleHeight: compactDensity ? 18 : 28
+    readonly property real sliderHandleGap: compactDensity ? 3 : 6
+    readonly property real sliderTrackHeightS: compactDensity ? 12 : 24
+    readonly property real sliderHandleHeightS: compactDensity ? 20 : 36
+    readonly property real sliderTrackHeightM: compactDensity ? 16 : 40
+    readonly property real sliderHandleHeightM: compactDensity ? 24 : 52
     readonly property real sliderTrackHeightL: 56
     readonly property real sliderHandleHeightL: 68
     readonly property real sliderTrackHeightXL: 96
@@ -1291,7 +1311,7 @@ Singleton {
     readonly property real switchThumbPressed: 28
     readonly property real sliderStopSize: 4
     readonly property real sliderTickSize: 3
-    readonly property real menuItemHeight: 40
+    readonly property real menuItemHeight: compactDensity ? 24 : 40
     readonly property real outlineWidth: 1
     readonly property real outlineWidthFocused: 2
     readonly property real dividerWidth: 1
@@ -1316,10 +1336,10 @@ Singleton {
     readonly property color screenOffColor: "#000000"
     readonly property real scrimAlpha: 0.55
     readonly property color scrimColor: currentThemeData.scrim || "#000000"
-    readonly property real buttonHeightXXS: 28
-    readonly property real buttonHeightXS: 32
-    readonly property real buttonHeightS: 40
-    readonly property real buttonHeightM: 56
+    readonly property real buttonHeightXXS: compactDensity ? 20 : 28
+    readonly property real buttonHeightXS: compactDensity ? 24 : 32
+    readonly property real buttonHeightS: compactDensity ? 28 : 40
+    readonly property real buttonHeightM: compactDensity ? 36 : 56
     readonly property real buttonMinWidth: 58
     readonly property real pressScale: 0.98
     readonly property real iconEnterScale: 0.6
@@ -1661,6 +1681,9 @@ Singleton {
     }
 
     function barIconSize(barThickness, offset, maximizeIcon, iconScale) {
+        // on the macos scale every bar icon is as large as the bar's text, whatever offset its widget asks for
+        if (macosTypeScale)
+            return Math.round(barTextSize(barThickness, undefined, maximizeIcon) * (iconScale !== undefined ? iconScale : 1.0));
         const defaultOffset = offset !== undefined ? offset : -6;
         const size = (maximizeIcon ?? false) ? iconSizeLarge : iconSize;
         const s = iconScale !== undefined ? iconScale : 1.0;
@@ -1672,6 +1695,9 @@ Singleton {
         const scale = barThickness / 48;
         const dankBarScale = fontScale !== undefined ? fontScale : 1.0;
         const maximized = maximizeText ?? false;
+        // the macos menu bar sets its text at body size at any height
+        if (macosTypeScale)
+            return Math.round((maximized ? fontSizeLarge : fontSizeMedium) * dankBarScale);
         if (scale <= 0.75)
             return Math.round((maximized ? fontSizeMedium : fontSizeSmall * 0.9) * dankBarScale);
         if (scale >= 1.25)

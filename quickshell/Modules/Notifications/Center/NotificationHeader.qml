@@ -116,7 +116,22 @@ Item {
             tooltipText: I18n.tr("Settings")
             onClicked: root.settingsRequested()
         }
+        // with the minimum information, clearing says so in words rather than a glyph
+        DButton {
+            visible: SettingsData.minimalInfo
+            text: I18n.tr("Clear All")
+            buttonHeight: Theme.buttonHeightXS
+            enabled: root.currentTab === 0 ? NotificationService.notifications.length > 0 : NotificationService.historyList.length > 0
+            onClicked: {
+                if (root.currentTab === 0) {
+                    NotificationService.clearAllNotifications();
+                    return;
+                }
+                NotificationService.clearHistory();
+            }
+        }
         DActionButton {
+            visible: !SettingsData.minimalInfo
             iconName: "delete_sweep"
             buttonSize: Theme.buttonHeightXS
             tooltipText: I18n.tr("Clear All")

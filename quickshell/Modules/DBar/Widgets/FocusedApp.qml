@@ -30,7 +30,8 @@ BasePill {
     }
     property real allottedPrimarySize: 0
     property int availableWidth: allottedPrimarySize > 0 ? allottedPrimarySize : maxWidth
-    readonly property real naturalPrimarySize: isVerticalOrientation ? height : !hasWindowsOnCurrentWorkspace ? 0 : Theme.snap(Math.min(contentItem?.naturalWidth ?? 0, maxWidth - horizontalPadding * 2) + horizontalPadding * 2, dpr)
+    // rounded up, not to the nearest pixel: a title half a pixel short of its width is elided
+    readonly property real naturalPrimarySize: isVerticalOrientation ? height : !hasWindowsOnCurrentWorkspace ? 0 : Math.ceil((Math.min(contentItem?.naturalWidth ?? 0, maxWidth - horizontalPadding * 2) + horizontalPadding * 2) * dpr) / dpr
     readonly property real minimumPrimarySize: isVerticalOrientation ? height : Math.min(naturalPrimarySize, Theme.snap((contentItem?.minimumWidth ?? 0) + horizontalPadding * 2, dpr))
     readonly property real effectiveHorizontalWidth: Math.max(0, Math.min(maxWidth, availableWidth))
     readonly property real effectiveHorizontalInnerWidth: Math.max(0, effectiveHorizontalWidth - horizontalPadding * 2)
@@ -298,7 +299,8 @@ BasePill {
                         color: root.contentColor
                         anchors.verticalCenter: parent.verticalCenter
                         wrapMode: Text.NoWrap
-                        elide: Text.ElideRight
+                        // title only (compact): a long title is shortened in the middle, keeping its start and its end
+                        elide: compactMode ? Text.ElideMiddle : Text.ElideRight
                         maximumLineCount: 1
                         width: {
                             const sp = contentRow.spacing;

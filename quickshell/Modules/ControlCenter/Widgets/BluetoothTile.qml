@@ -36,9 +36,18 @@ CcTile {
             return I18n.tr("Bluetooth", "bluetooth status");
         if (!adapter)
             return I18n.tr("No adapter", "bluetooth status");
+        if (SettingsData.minimalInfo) {
+            if (!adapterOn)
+                return I18n.tr("Off", "bluetooth status");
+            if (BluetoothService.connecting)
+                return I18n.tr("Connecting...", "bluetooth status");
+            return primaryDevice ? deviceLabel(primaryDevice) : I18n.tr("On", "bluetooth status");
+        }
         return adapter.enabled ? I18n.tr("Enabled", "bluetooth status") : I18n.tr("Disabled", "bluetooth status");
     }
     subtitle: {
+        if (SettingsData.minimalInfo)
+            return "";
         if (!BluetoothService.available)
             return I18n.tr("No adapters", "bluetooth status");
         if (!adapterOn)

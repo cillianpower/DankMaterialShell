@@ -50,6 +50,9 @@ function isRemovable(widget) {
 
 // A saved list without the pencil gets it back whatever state the migration left it in.
 function ensureEditButton() {
+    // with the minimum information, edit mode is reached by its shortcut (F2, Ctrl+E), not a pencil
+    if (Common.SettingsData.minimalInfo)
+        return;
     const widgets = Common.SettingsData.controlCenterWidgets;
     if (!Array.isArray(widgets) || widgets.some(widget => widget?.id === EDIT_ID))
         return;
@@ -63,6 +66,9 @@ function isShown(widget) {
         return Services.BatteryService.batteryAvailable || Services.PowerProfileWatcher.available;
     case "diskUsage":
         return Services.DgopService.dgopAvailable;
+    case "inputVolumeSlider":
+        // with the minimum information, the mic's level shows only while something is using the mic
+        return !Common.SettingsData.minimalInfo || Services.PrivacyService.microphoneActive;
     default:
         return true;
     }

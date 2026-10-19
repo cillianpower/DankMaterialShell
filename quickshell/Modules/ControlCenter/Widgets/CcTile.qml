@@ -36,13 +36,13 @@ Item {
     property real expandedMinimumHeight: Theme.listItemHeight
     readonly property Item expandedItem: expandedLoader.item
     readonly property bool expanded: expandedContent !== null && width >= CcMetrics.expandedTileMinWidth && height >= headerHeight + expandedMinimumHeight + tilePadding * 2 + Theme.spacingM
-    readonly property real tilePadding: tall && !narrow ? Theme.spacingM : Theme.spacingS
+    readonly property real tilePadding: tall && !narrow ? Theme.spacingM : (CcMetrics.compact ? Theme.spacingXS + Theme.spacingXXS : Theme.spacingS)
     readonly property real baseIconExtent: Math.min(Math.max(Theme.minimumTouchTargetSize, CcMetrics.iconBoxSize), bodyHeight - tilePadding * 2, width - tilePadding * 2)
     readonly property real iconExtent: stacked ? Math.max(0, Math.min(baseIconExtent, height - tilePadding * 2 - Theme.spacingS - titleLabel.implicitHeight)) : baseIconExtent
     readonly property real headerHeight: Math.max(baseIconExtent, Theme.fontSizeLarge + Theme.fontSizeMedium + Theme.spacingS)
     readonly property bool stacked: tall && !expanded && width <= height
     readonly property bool narrow: width < CcMetrics.expandedTileMinWidth
-    readonly property bool denseText: narrow || small
+    readonly property bool denseText: narrow || small || Theme.macosTypeScale
     readonly property real labelHeight: titleLabel.implicitHeight + (showSubtitle ? Theme.spacingXXS + subtitleLabel.implicitHeight : 0)
     readonly property real textGap: CcMetrics.tileTextGap
     readonly property bool showSubtitle: subtitle !== "" && (!stacked || height - tilePadding * 2 >= iconExtent + Theme.spacingS + titleLabel.implicitHeight + Theme.spacingXXS + subtitleLabel.implicitHeight)

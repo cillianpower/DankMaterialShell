@@ -10,7 +10,7 @@ LevelOSD {
 
     readonly property var audio: AudioService.sink?.audio ?? null
 
-    iconName: AudioService.sinkVolumeIconName
+    iconName: SettingsData.minimalInfo && !audio?.muted ? AudioService.sinkIcon(AudioService.sink) : AudioService.sinkVolumeIconName
     insetIconName: "music_note"
     endIconName: AudioService.sinkIcon(AudioService.sink)
     endIconLabel: I18n.tr("Audio Output")
