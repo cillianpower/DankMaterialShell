@@ -73,7 +73,7 @@ DListItem {
         anchors.left: parent.left
         anchors.leftMargin: LauncherMetrics.rowPadding
         anchors.verticalCenter: parent.verticalCenter
-        visible: !(root.item?.type === "dmenu" && root.item?.data?.nonSelectable && !root.item?.icon)
+        visible: (SettingsData.dankLauncherV2ShowAppIcons || root.item?.type !== "app") && !(root.item?.type === "dmenu" && root.item?.data?.nonSelectable && !root.item?.icon)
         iconValue: root.iconValue
         iconMargins: root.iconMargins
         fallbackLeftMargin: root.iconFallbackLeftMargin
@@ -91,7 +91,7 @@ DListItem {
 
     Item {
         id: textColumn
-        anchors.left: iconRenderer.right
+        anchors.left: iconRenderer.visible ? iconRenderer.right : parent.left
         anchors.leftMargin: LauncherMetrics.rowPadding
         anchors.right: rightContent.left
         anchors.rightMargin: rightContent.width > 0 ? Theme.spacingM : 0
@@ -109,9 +109,12 @@ DListItem {
             font.weight: (root.item?.type === "dmenu" && root.item?.data?.urgent) ? Theme.fontWeightBold : Theme.fontWeightMedium
             font.family: Theme.fontFamily
             color: (root.item?.type === "dmenu" && root.item?.data?.urgent) ? Theme.error : root.item?.data?.active ? Theme.primary : root.contentColor
-            wrapMode: Text.WordWrap
+            // rich text (a highlighted match) ignores the line limit and elision, so it stays on one line, clipped;
+            // otherwise a long clipboard entry wraps out of its row
+            wrapMode: root.item?._hRich ? Text.NoWrap : Text.WordWrap
             maximumLineCount: 1
             elide: Text.ElideRight
+            clip: true
             horizontalAlignment: Text.AlignLeft
         }
 
@@ -141,9 +144,10 @@ DListItem {
             font.pixelSize: Theme.fontSizeSmall
             font.family: Theme.fontFamily
             color: root.supportingContentColor
-            wrapMode: Text.WordWrap
+            wrapMode: root.item?._hRich ? Text.NoWrap : Text.WordWrap
             maximumLineCount: 1
             elide: Text.ElideRight
+            clip: true
             visible: root.showDescription && (root.item?.subtitle ?? "").length > 0
             horizontalAlignment: Text.AlignLeft
         }
