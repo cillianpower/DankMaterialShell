@@ -81,7 +81,8 @@ Singleton {
     readonly property string _homeUrl: StandardPaths.writableLocation(StandardPaths.HomeLocation)
     readonly property string _configUrl: StandardPaths.writableLocation(StandardPaths.ConfigLocation)
     readonly property string _configDir: Paths.strip(_configUrl)
-    readonly property string pluginSettingsPath: _configDir + "/DankMaterialShell/plugin_settings.json"
+    // DMS_PLUGIN_SETTINGS_FILE: a shell built on dms keeps its plugin settings with its own config
+    readonly property string pluginSettingsPath: Quickshell.env("DMS_PLUGIN_SETTINGS_FILE") || _configDir + "/DankMaterialShell/plugin_settings.json"
     readonly property bool qtengineActive: Quickshell.env("QT_QPA_PLATFORMTHEME") === "qtengine" || Quickshell.env("QT_QPA_PLATFORMTHEME_QT6") === "qtengine"
 
     property bool _loading: false
@@ -3913,7 +3914,8 @@ Singleton {
     SettingsFile {
         id: defaultSettingsFile
 
-        filePath: StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/DankMaterialShell/settings.json"
+        // DMS_SETTINGS_FILE: a shell built on dms keeps its settings with its own config
+        filePath: Quickshell.env("DMS_SETTINGS_FILE") || StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/DankMaterialShell/settings.json"
 
         Component.onCompleted: {
             _registerSettingsFile(defaultSettingsFile);
