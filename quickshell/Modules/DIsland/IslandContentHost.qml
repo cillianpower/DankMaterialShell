@@ -73,6 +73,20 @@ Item {
     property bool homeExpandedTouched: false
 
     Keys.onEscapePressed: root.controller.requestCollapse()
+    // agartha: the island's pages in turn, from anywhere in it (a page keeps the plain arrows: the calendar's days, a
+    // slider; a text field keeps Ctrl+arrows for its words)
+    Shortcut {
+        sequences: ["Ctrl+Right", "Ctrl+Tab"]
+        context: Qt.WindowShortcut
+        enabled: root.controller.expanded
+        onActivated: root.controller.cycleActivity(1, true)
+    }
+    Shortcut {
+        sequences: ["Ctrl+Left"]
+        context: Qt.WindowShortcut
+        enabled: root.controller.expanded
+        onActivated: root.controller.cycleActivity(-1, true)
+    }
 
     function fadeCompact(morph) {
         return 1 - Math.max(0, Math.min(1, morph / 0.34));
@@ -87,6 +101,9 @@ Item {
     }
 
     function compactOpacity(activity) {
+        // agartha: the home face stays on the bar while a page is open (IslandController.homeFacePinned), alone
+        if (root.controller.homeFacePinned)
+            return activity === "home" ? 1 : 0;
         const incoming = root.renderedActivity === activity ? root.activityFade * root.compactFade : 0;
         const outgoing = root.outgoingActivity === activity ? (1 - root.activityFade) * root.outgoingCompactFade : 0;
         return Math.max(incoming, outgoing);
