@@ -349,6 +349,7 @@ Card {
 
         DMonthGrid {
             id: calendarGrid
+            plainDays: SettingsData.minimalInfo
 
             anchors.fill: parent
             visible: !root.showEventDetails

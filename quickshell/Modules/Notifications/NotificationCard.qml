@@ -42,7 +42,9 @@ Rectangle {
     readonly property bool hasContentImage: contentImageSource.length > 0 && contentImage.status !== Image.Error
     readonly property bool contentVisible: !headerOnly && (!privacyMode || descriptionExpanded)
     readonly property bool canExpand: !headerOnly && (hasMoreText || hasContentImage || descriptionExpanded || (hasBody && privacyMode))
-    readonly property real targetHeight: Math.max(NotificationMetrics.appIconSize, content.implicitHeight) + NotificationMetrics.cardPadding * 2
+    // the minimum information: no app icon or lettered stand-in, and the app's name only when the title isn't it
+    readonly property bool showAppIcon: !SettingsData.minimalInfo
+    readonly property real targetHeight: Math.max(showAppIcon ? NotificationMetrics.appIconSize : 0, content.implicitHeight) + NotificationMetrics.cardPadding * 2
     readonly property bool isAnimating: heightAnimation.running
 
     signal closeRequested
@@ -152,7 +154,8 @@ Rectangle {
 
     Item {
         id: iconBox
-        width: NotificationMetrics.appIconSize
+        visible: root.showAppIcon
+        width: root.showAppIcon ? NotificationMetrics.appIconSize : 0
         height: width
         anchors.left: parent.left
         anchors.leftMargin: NotificationMetrics.cardPadding
@@ -187,7 +190,7 @@ Rectangle {
     Column {
         id: content
         anchors.left: iconBox.right
-        anchors.leftMargin: NotificationMetrics.iconSpacing
+        anchors.leftMargin: root.showAppIcon ? NotificationMetrics.iconSpacing : 0
         anchors.right: parent.right
         anchors.rightMargin: NotificationMetrics.cardPadding
         y: NotificationMetrics.cardPadding
@@ -213,7 +216,8 @@ Rectangle {
                     anchors.right: controls.left
                     anchors.rightMargin: Theme.spacingXS
                     anchors.verticalCenter: parent.verticalCenter
-                    text: (root.notificationData?.appName || "") + (root.showTime && root.notificationData?.timeStr ? " · " + root.notificationData.timeStr : "")
+                    readonly property string appName: SettingsData.minimalInfo && (root.notificationData?.appName || "") === (root.notificationData?.summary || "") ? "" : (root.notificationData?.appName || "")
+                    text: appName + (root.showTime && root.notificationData?.timeStr ? (appName ? " · " : "") + root.notificationData.timeStr : "")
                     horizontalAlignment: Text.AlignLeft
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.onSurfaceVariant

@@ -26,7 +26,7 @@ DOSD {
     signal levelRequested(int level)
     signal iconClicked
 
-    readonly property real osdValueReserve: endIconName.length > 0 || SettingsData.osdAlwaysShowValue ? Theme.buttonHeightM : 0
+    readonly property real osdValueReserve: (endIconName.length > 0 && !SettingsData.minimalInfo) || SettingsData.osdAlwaysShowValue ? Theme.buttonHeightM : 0
 
     function showEndIconTooltip(item) {
         endIconTooltip.active = true;
@@ -86,12 +86,13 @@ DOSD {
         sliderSize: root.isVerticalLayout ? "m" : "s"
         iconName: root.iconName
         insetIconName: root.insetIconName
-        endIconName: root.endIconName
+        endIconName: SettingsData.minimalInfo ? "" : root.endIconName
+        tonalIcon: !SettingsData.minimalInfo
         endIconInteractive: root.sheet !== null
         endIconLabel: root.endIconLabel
         iconInteractive: root.iconInteractive
         iconLabel: root.iconLabel
-        iconColor: root.iconColor
+        iconColor: SettingsData.minimalInfo ? Theme.surfaceText : root.iconColor
         iconBackgroundColor: root.fillColor === Theme.error ? Theme.errorContainer : root.fillColor
         fillColor: root.fillColor
         value: root.value

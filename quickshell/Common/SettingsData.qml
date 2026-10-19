@@ -649,6 +649,16 @@ Singleton {
     property string displayFontFamily: Spec.SPEC.displayFontFamily.def
     property int fontWeight: Font.Normal
     property real fontScale: Spec.SPEC.fontScale.def
+    property string typeScale: Spec.SPEC.typeScale.def
+    property string density: Spec.SPEC.density.def
+    property bool controlCenterPagesInPlace: Spec.SPEC.controlCenterPagesInPlace.def
+    property bool surfaceTint: Spec.SPEC.surfaceTint.def
+    // the launcher and the modals both come from the top, when the launcher does
+    property bool frameSurfacesFromTop: Spec.SPEC.frameSurfacesFromTop.def
+    // the frame draws over the windows only while a surface needs it; only the bar reserves space
+    property bool frameOnDemand: Spec.SPEC.frameOnDemand.def
+    // the minimum information: no embellishment explaining what something is (one plain icon on an osd, one line on a tile)
+    property bool minimalInfo: Spec.SPEC.minimalInfo.def
     property int textRenderType: SettingsData.TextRenderType.Qt
     property int textRenderQuality: SettingsData.TextRenderQuality.Default
 

@@ -9,7 +9,8 @@ Singleton {
     readonly property real sheetWidthDefault: sheetWidthFor(defaultColumns)
     readonly property int defaultColumns: 8
     readonly property int minimumColumns: 6
-    readonly property real sheetPadding: PopoutMetrics.contentPadding
+    readonly property bool compact: Theme.compactDensity
+    readonly property real sheetPadding: compact ? Theme.spacingS + Theme.spacingXXS : PopoutMetrics.contentPadding
     readonly property real columnWidth: tileHeight
     readonly property real gridStep: 0.5
     property int columnPreview: 0
@@ -34,28 +35,28 @@ Singleton {
         return sheetPadding * 2 + columns * columnWidth + (columns - 1) * gridGap;
     }
     readonly property real maxHeightInset: 100
-    readonly property real minHeight: 300
+    readonly property real minHeight: compact ? 0 : 300
     readonly property real fallbackScreenHeight: 1080
     readonly property real triggerWidth: 80
 
-    readonly property real tileHeight: 64
+    readonly property real tileHeight: compact ? 36 : 64
     readonly property real gridRowUnit: tileHeight
     readonly property real expandedTileMinWidth: columnWidth * 3 + gridGap * 2
-    readonly property real sliderRowHeight: Theme.minimumTouchTargetSize
-    readonly property real stripTrackHeight: 32
-    readonly property real stripHandleHeight: stripTrackHeight + Theme.sliderHandleGap * 2
-    readonly property real gridGap: Theme.spacingS
+    readonly property real sliderRowHeight: compact ? tileHeight : Theme.minimumTouchTargetSize
+    readonly property real stripTrackHeight: compact ? 12 : 32
+    readonly property real stripHandleHeight: stripTrackHeight + (compact ? Theme.spacingXS : Theme.sliderHandleGap) * 2
+    readonly property real gridGap: compact ? Theme.spacingXS + Theme.spacingXXS : Theme.spacingS
     readonly property real iconScale: SettingsData.controlCenterIconScale
-    readonly property real tileIconSize: Theme.iconSizeLarge * iconScale
-    readonly property real iconBoxSize: Theme.minimumTouchTargetSize * iconScale
+    readonly property real tileIconSize: (compact ? Theme.iconSizeMedium : Theme.iconSizeLarge) * iconScale
+    readonly property real iconBoxSize: (compact ? 24 : Theme.minimumTouchTargetSize) * iconScale
     readonly property real tileActiveRadius: Theme.scaledRadius(24, tileHeight / 2)
     readonly property real tallTileRadius: Theme.cornerRadiusXL
     readonly property real iconBoxActiveRadius: Theme.cornerRadiusL
-    readonly property real iconBoxIconSize: Theme.iconSize * iconScale
+    readonly property real iconBoxIconSize: (compact ? Theme.iconSizeSmall : Theme.iconSize) * iconScale
     readonly property real tallMeterThickness: 28
     readonly property real pillMeterThickness: Math.round(18 * iconScale)
-    readonly property real tileTextGap: Theme.spacingM
-    readonly property real smallRowHeight: Math.min(iconBoxSize, tileHeight)
+    readonly property real tileTextGap: compact ? Theme.spacingS : Theme.spacingM
+    readonly property real smallRowHeight: compact ? 28 : Math.min(iconBoxSize, tileHeight)
     readonly property real trashSwallowScale: 0.6
     // Joined to the sheet, whose own padding separates the buttons from the grid.
     readonly property real editActionsHeight: Theme.iconButtonSize + sheetPadding
@@ -63,27 +64,28 @@ Singleton {
     readonly property real editOverflow: Math.max(PopoutMetrics.editOverflow * 2, editActionsHeight)
     // The island clips its faces, so its actions sit inside the sheet.
     readonly property real islandEditRoom: editActionsHeight + Theme.spacingS
-    readonly property real runningAppsIconSize: Theme.iconSize * iconScale
+    readonly property real runningAppsIconSize: (compact ? Theme.iconSizeMedium : Theme.iconSize) * iconScale
     // The resize corner counts a small tile as this many rows and snaps to the nearer of this and a full row.
     readonly property real smallRowFraction: 0.5
-    readonly property real shapeButtonSize: Theme.iconSize
+    readonly property real shapeButtonSize: compact ? Theme.iconSizeMedium : Theme.iconSize
 
     readonly property real detailDialogInset: Theme.spacingL
     readonly property real detailDialogPadding: Theme.spacingS
     readonly property real detailMinContentHeight: Theme.listItemTwoLineHeight * 3
     readonly property real headerActionSize: Theme.buttonHeightXS
-    readonly property real headerActionIconSize: Theme.iconSizeMedium
+    readonly property real headerActionIconSize: compact ? Theme.iconSizeSmall : Theme.iconSizeMedium
     readonly property real headerEdgeInset: rowPaddingH - (headerActionSize - headerActionIconSize) / 2
-    readonly property real pageHeaderHeight: Theme.fontSizeXXLarge + Theme.spacingM * 2
-    readonly property real pageTitleSize: Theme.fontSizeXXLarge
+    // on the macos scale a page's title is a headline (body size, bold), as in macos's control centre
+    readonly property real pageTitleSize: Theme.macosTypeScale ? Theme.fontSizeMedium : Theme.fontSizeXXLarge
+    readonly property real pageHeaderHeight: (Theme.macosTypeScale ? Theme.fontSizeXLarge : Theme.fontSizeXXLarge) + Theme.spacingM * 2
     readonly property real detailHeightList: 350
     readonly property real detailHeightBrightness: 400
     readonly property real detailHeightDefault: 250
     readonly property int transitionDuration: Theme.expressiveDurations.expressiveFastSpatial
     readonly property int fadeDuration: Theme.expressiveDurations.expressiveEffects
 
-    readonly property real rowPaddingH: Theme.spacingL
-    readonly property real rowPaddingV: Theme.spacingM
+    readonly property real rowPaddingH: compact ? Theme.spacingS + Theme.spacingXXS : Theme.spacingL
+    readonly property real rowPaddingV: compact ? Theme.spacingXS + Theme.spacingXXS : Theme.spacingM
     readonly property real detailContentGap: Theme.spacingS
     readonly property real sectionLabelTopGap: Theme.spacingS
     readonly property real sectionLabelBottomGap: Theme.spacingXS
@@ -128,7 +130,7 @@ Singleton {
     readonly property color tileInactiveSubtitle: Theme.surfaceVariantText
     readonly property color tileInactiveIcon: Theme.primary
     readonly property color bareActiveIcon: Theme.primary
-    readonly property real quickBarePadding: Theme.spacingL
+    readonly property real quickBarePadding: compact ? Theme.spacingS + Theme.spacingXXS : Theme.spacingL
     readonly property real quickBareWidth: iconBoxIconSize + quickBarePadding
     readonly property real quickTileGap: Theme.spacingXS
 

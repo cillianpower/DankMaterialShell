@@ -54,9 +54,14 @@ CcTile {
                 return NetworkService.currentWifiSSID;
             break;
         }
+        if (SettingsData.minimalInfo)
+            return NetworkService.wifiEnabled ? I18n.tr("Not connected", "network status") : I18n.tr("Off", "network status");
         return NetworkService.wifiEnabled ? I18n.tr("Not connected", "network status") : I18n.tr("WiFi is off", "network status");
     }
     subtitle: {
+        // one line: the title already says it
+        if (SettingsData.minimalInfo)
+            return "";
         if (NetworkService.wifiToggling)
             return I18n.tr("Please wait...", "network status");
         if (wifiConnecting)
