@@ -122,6 +122,8 @@ BasePill {
             return root.visibleSortedTrayItems.length;
 
         const explicitLimit = Number(root.configuredMaxVisibleItems || 0);
+        if (explicitLimit < 0)
+            return 0;
         if (explicitLimit > 0)
             return Math.max(1, Math.min(root.visibleSortedTrayItems.length, explicitLimit));
 
