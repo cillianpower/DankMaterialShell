@@ -278,7 +278,8 @@ FocusScope {
         anchors.fill: parent
         visible: !editMode
 
-        readonly property bool inverted: (root.parentModal?.frameOwnsConnectedChrome ?? false) && (root.parentModal?.resolvedConnectedBarSide === "top")
+        // from the top, dms flips the launcher to put its search field last; with surfaces from the top, search stays first
+        readonly property bool inverted: !SettingsData.frameSurfacesFromTop && (root.parentModal?.frameOwnsConnectedChrome ?? false) && (root.parentModal?.resolvedConnectedBarSide === "top")
         readonly property bool _connectedArcAtHeader: inverted && !(root.parentModal?.launcherArcExtenderActive ?? false)
 
         Item {

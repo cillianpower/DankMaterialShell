@@ -59,23 +59,27 @@ Item {
         }
     }
 
+    // only ever clears its own region: another blur may own the window's (ConnectedBodyBlur)
     function _apply() {
         if (!targetWindow)
             return;
-        targetWindow.BackgroundEffect.blurRegion = _active ? blurRegion : null;
+        if (_active)
+            targetWindow.BackgroundEffect.blurRegion = blurRegion;
+        else if (targetWindow.BackgroundEffect.blurRegion === blurRegion)
+            targetWindow.BackgroundEffect.blurRegion = null;
     }
 
     function _clear() {
-        if (targetWindow)
+        if (targetWindow && targetWindow.BackgroundEffect.blurRegion === blurRegion)
             targetWindow.BackgroundEffect.blurRegion = null;
     }
 
     // Re-publish blur region after wl_surface remaps (e.g. screen change).
     function kick() {
-        if (!targetWindow)
+        if (!targetWindow || !_active)
             return;
         targetWindow.BackgroundEffect.blurRegion = null;
-        targetWindow.BackgroundEffect.blurRegion = _active ? blurRegion : null;
+        targetWindow.BackgroundEffect.blurRegion = blurRegion;
     }
 
     // Republish after geometry settles, plus one trailing pass.

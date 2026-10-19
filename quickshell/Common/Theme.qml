@@ -1028,6 +1028,8 @@ Singleton {
             return withAlpha(hostSurface, popupTransparency);
         return isConnectedEffect ? frameSurfaceColor : withAlpha(hostSurface, popupTransparency);
     }
+    // an untinted frame: the blur is a connected surface's body, so each surface sets its own (it moves with it)
+    readonly property bool connectedBodiesBlurThemselves: frameSurfaceColor.a < 0.01
     readonly property color frameSurfaceColor: typeof SettingsData === "undefined" ? withAlpha(hostSurface, popupTransparency) : withAlpha(SettingsData.frameSurfaceBase, SettingsData.frameSurfaceOpacity)
     readonly property real connectedSurfaceRadius: isConnectedEffect ? connectedCornerRadius : windowRadius
     readonly property bool connectedSurfaceBlurEnabled: (typeof SettingsData === "undefined") ? true : (!isConnectedEffect || SettingsData.frameBlurEnabled)

@@ -109,6 +109,7 @@ PanelWindow {
     onVisibleChanged: {
         if (!visible)
             _surfaceFrameReady = false;
+        _syncConnectedChrome();
     }
 
     Connections {
@@ -152,12 +153,45 @@ PanelWindow {
 
     WindowBlur {
         targetWindow: root
+        // connected, the frame or the osd's ConnectedBodyBlur owns the window's blur
+        blurEnabled: !root.connectedFrameMode
         surfaceColor: Theme.withAlpha(root.surfaceColor, osdContainer.popupSurfaceAlpha)
         blurX: shadowBuffer
         blurY: shadowBuffer
-        blurWidth: presented ? alignedWidth : 0
-        blurHeight: presented ? alignedHeight : 0
+        blurWidth: presented && !root.connectedFrameMode ? alignedWidth : 0
+        blurHeight: presented && !root.connectedFrameMode ? alignedHeight : 0
         blurRadius: root.surfaceRadius
+    }
+
+    // an untinted frame: the osd's own window blurs its body (with its connectors), so the blur moves with it
+    readonly property var _localBodyDescriptor: {
+        const side = connectedBarSide;
+        const hidden = 1 - connectedReveal;
+        const horizontal = side === "top" || side === "bottom";
+        return {
+            "kind": "osd",
+            "visible": connectedFrameMode && visible,
+            "barSide": side,
+            "bodyRect": {
+                "x": shadowBuffer,
+                "y": shadowBuffer,
+                "width": alignedWidth,
+                "height": alignedHeight
+            },
+            "animationOffset": {
+                "x": horizontal ? 0 : (side === "left" ? -alignedWidth : alignedWidth) * hidden,
+                "y": horizontal ? (side === "top" ? -alignedHeight : alignedHeight) * hidden : 0
+            },
+            "scale": 1,
+            "opacity": 0
+        };
+    }
+
+    ConnectedBodyBlur {
+        targetWindow: root
+        active: root.connectedFrameMode && Theme.connectedBodiesBlurThemselves && root.visible
+        dpr: root.dpr
+        descriptor: root._localBodyDescriptor
     }
 
     color: "transparent"
@@ -168,6 +202,66 @@ PanelWindow {
     readonly property real shadowBuffer: Theme.elevationRenderPadding(Theme.elevationLevel2, Theme.elevationLightDirection, Theme.spacingXS, Theme.spacingS, Theme.spacingL)
     readonly property real alignedWidth: Theme.px(osdWidth, dpr)
     readonly property real alignedHeight: Theme.px(osdHeight, dpr)
+
+    readonly property bool connectedFrameMode: CompositorService.usesConnectedFrameChromeForScreen(screen)
+    readonly property string connectedBarSide: {
+        switch (osdPosition) {
+        case SettingsData.Position.LeftCenter:
+            return "left";
+        case SettingsData.Position.RightCenter:
+            return "right";
+        case SettingsData.Position.Top:
+        case SettingsData.Position.Left:
+        case SettingsData.Position.TopCenter:
+            return "top";
+        default:
+            return "bottom";
+        }
+    }
+    readonly property real connectedReveal: Math.max(0, Math.min(1, (osdScaleSpring.value - Theme.popupEnterScale) / Math.max(0.001, 1 - Theme.popupEnterScale)))
+    readonly property string _chromeOwnerId: "osd:" + osdKind + ":" + root.toString()
+
+    function _syncConnectedChrome() {
+        const name = screen?.name ?? "";
+        if (!name)
+            return;
+        if (!connectedFrameMode || !visible) {
+            ConnectedModeState.releaseSurface(name, "osd", _chromeOwnerId);
+            return;
+        }
+        const side = connectedBarSide;
+        const hidden = 1 - connectedReveal;
+        const horizontal = side === "top" || side === "bottom";
+        ConnectedModeState.claimSurface(name, "osd", {
+            "kind": "osd",
+            "screenName": name,
+            "phase": shouldBeVisible ? "open" : "closing",
+            "visible": true,
+            "presented": true,
+            "barSide": side,
+            "bodyRect": {
+                "x": alignedX,
+                "y": alignedY,
+                "width": alignedWidth,
+                "height": alignedHeight
+            },
+            "animationOffset": {
+                "x": horizontal ? 0 : (side === "left" ? -alignedWidth : alignedWidth) * hidden,
+                "y": horizontal ? (side === "top" ? -alignedHeight : alignedHeight) * hidden : 0
+            },
+            "scale": 1,
+            "opacity": Theme.connectedSurfaceColor.a
+        }, _chromeOwnerId, false);
+    }
+
+    onConnectedRevealChanged: _syncConnectedChrome()
+    onConnectedFrameModeChanged: _syncConnectedChrome()
+    onConnectedBarSideChanged: _syncConnectedChrome()
+    onAlignedXChanged: _syncConnectedChrome()
+    onAlignedYChanged: _syncConnectedChrome()
+    onAlignedWidthChanged: _syncConnectedChrome()
+    onAlignedHeightChanged: _syncConnectedChrome()
+    Component.onDestruction: ConnectedModeState.releaseSurface(screen?.name ?? "", "osd", _chromeOwnerId)
 
     readonly property bool isVerticalLayout: osdPosition === SettingsData.Position.LeftCenter || osdPosition === SettingsData.Position.RightCenter
 
@@ -222,6 +316,8 @@ PanelWindow {
     }
 
     function edgeInset(side) {
+        if (connectedFrameMode)
+            return SettingsData.frameEdgeReservation(screen, side) + (side === connectedBarSide ? 0 : Theme.connectedCornerRadius + Theme.spacingM);
         return Theme.spacingM + Math.max(barEdgeOffsets[side], dockOffsetForEdge(side));
     }
 
@@ -334,8 +430,8 @@ PanelWindow {
         y: shadowBuffer
         width: alignedWidth
         height: alignedHeight
-        opacity: presented ? 1 : 0
-        scale: osdScaleSpring.value
+        opacity: root.connectedFrameMode ? Math.max(0, (root.connectedReveal - 0.5) * 2) : (presented ? 1 : 0)
+        scale: root.connectedFrameMode ? 1 : osdScaleSpring.value
 
         property bool childHovered: false
         readonly property real popupSurfaceAlpha: Theme.popupTransparency
@@ -347,10 +443,10 @@ PanelWindow {
             level: Theme.elevationLevel2
             fallbackOffset: Theme.spacingXS
             targetRadius: root.surfaceRadius
-            targetColor: Theme.withAlpha(root.surfaceColor, osdContainer.popupSurfaceAlpha)
+            targetColor: root.connectedFrameMode ? "transparent" : Theme.withAlpha(root.surfaceColor, osdContainer.popupSurfaceAlpha)
             borderColor: Theme.outlineVariant
             borderWidth: 0
-            shadowEnabled: Theme.elevationEnabled && SettingsData.popoutElevationEnabled && Quickshell.env("DMS_DISABLE_LAYER") !== "true" && Quickshell.env("DMS_DISABLE_LAYER") !== "1"
+            shadowEnabled: !root.connectedFrameMode && Theme.elevationEnabled && SettingsData.popoutElevationEnabled && Quickshell.env("DMS_DISABLE_LAYER") !== "true" && Quickshell.env("DMS_DISABLE_LAYER") !== "1"
         }
 
         MouseArea {
@@ -373,6 +469,7 @@ PanelWindow {
         }
 
         Behavior on opacity {
+            enabled: !root.connectedFrameMode
             NumberAnimation {
                 duration: animationDuration
                 easing.type: animationEasing

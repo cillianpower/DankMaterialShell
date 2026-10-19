@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.Common
+import "../../Common/LayoutResolver.js" as Resolver
 import qs.Modules.DIsland
 import qs.Services
 import "../../Common/ConnectorGeometry.js" as ConnectorGeometry
@@ -166,6 +167,12 @@ PanelWindow {
         readonly property var geometry: dockSurface?.body ?? Qt.rect(0, 0, 0, 0)
         readonly property real bodyRadius: dockSurface?.radius ?? 0
         readonly property real connectorRadius: dockSurface?.connector ?? 0
+        // a surface tethered to the screen's side at one end (the island at the bar's end) has no fillet there, and a
+        // far fillet where it meets the side instead, as a popout closed against a frame side
+        readonly property real startConnectorRadius: dockSurface?.radii?.start ?? connectorRadius
+        readonly property real endConnectorRadius: dockSurface?.radii?.end ?? connectorRadius
+        readonly property real farStartRadius: dockSurface?.radii?.farStart ?? 0
+        readonly property real farEndRadius: dockSurface?.radii?.farEnd ?? 0
 
         Region {
             id: _dockBodyBlurAnchor
@@ -196,14 +203,48 @@ PanelWindow {
             body: dockBlur.geometry
             placement: "left"
             bodyActive: _dockBodyBlurAnchor._active
-            connectorRadius: dockBlur.connectorRadius
+            connectorRadius: dockBlur.startConnectorRadius
         }
         ConnectorBlurRegion {
             barSide: dockBlur.descriptor.barSide
             body: dockBlur.geometry
             placement: "right"
             bodyActive: _dockBodyBlurAnchor._active
-            connectorRadius: dockBlur.connectorRadius
+            connectorRadius: dockBlur.endConnectorRadius
+        }
+        Region {
+            readonly property bool _active: _dockBodyBlurAnchor._active && dockBlur.farStartRadius > 0
+            readonly property var _rect: SurfaceGeometry.farBodyCapRect(dockBlur.descriptor.barSide, dockBlur.geometry, "left", dockBlur.farStartRadius, win._dpr)
+
+            x: _active ? Math.round(_rect.x) : 0
+            y: _active ? Math.round(_rect.y) : 0
+            width: _active ? Math.round(_rect.width) : 0
+            height: _active ? Math.round(_rect.height) : 0
+        }
+        Region {
+            readonly property bool _active: _dockBodyBlurAnchor._active && dockBlur.farEndRadius > 0
+            readonly property var _rect: SurfaceGeometry.farBodyCapRect(dockBlur.descriptor.barSide, dockBlur.geometry, "right", dockBlur.farEndRadius, win._dpr)
+
+            x: _active ? Math.round(_rect.x) : 0
+            y: _active ? Math.round(_rect.y) : 0
+            width: _active ? Math.round(_rect.width) : 0
+            height: _active ? Math.round(_rect.height) : 0
+        }
+        ConnectorBlurRegion {
+            barSide: dockBlur.descriptor.barSide
+            body: dockBlur.geometry
+            placement: "left"
+            far: true
+            bodyActive: _dockBodyBlurAnchor._active
+            connectorRadius: dockBlur.farStartRadius
+        }
+        ConnectorBlurRegion {
+            barSide: dockBlur.descriptor.barSide
+            body: dockBlur.geometry
+            placement: "right"
+            far: true
+            bodyActive: _dockBodyBlurAnchor._active
+            connectorRadius: dockBlur.farEndRadius
         }
     }
 
@@ -239,11 +280,13 @@ PanelWindow {
         if (body.width < 1 || body.height < 1)
             return null;
         const radius = Math.max(0, Math.min(descriptor.surfaceRadius >= 0 ? descriptor.surfaceRadius : win._surfaceRadius, body.width / 2, body.height / 2));
+        const radii = SurfaceGeometry.connectorRadii(descriptor, body, win._ccr, radius, win._dpr, true);
         return {
             descriptor: descriptor,
             body: body,
             radius: radius,
-            connector: SurfaceGeometry.connectorRadii(descriptor, body, win._ccr, radius, win._dpr, true).near
+            connector: radii.near,
+            radii: radii
         };
     }
     readonly property var _slideoutDescriptor: {
@@ -261,6 +304,23 @@ PanelWindow {
             descriptor: descriptor,
             body: body,
             radii: SurfaceGeometry.connectorRadii(descriptor, body, win._ccr, win._surfaceRadius, win._dpr, true)
+        };
+    }
+    readonly property var _osdSurface: {
+        win._surfaceRevision;
+        const descriptor = ConnectedModeState.surfaceDescriptor(win._screenName, "osd");
+        if (!win._connectedActive || !descriptor.visible)
+            return null;
+        const body = SurfaceGeometry.animatedBodyRect(descriptor, win._dpr);
+        if (body.width < 1 || body.height < 1)
+            return null;
+        const radius = Math.max(0, Math.min(win._surfaceRadius, body.width / 2, body.height / 2));
+        const thickness = SurfaceGeometry.isVertical(descriptor.barSide) ? body.width : body.height;
+        return {
+            descriptor: descriptor,
+            body: body,
+            radius: radius,
+            connector: Math.max(0, Math.min(win._ccr, radius, thickness - radius - win._seamOverlap))
         };
     }
     readonly property var _modalDescriptor: {
@@ -415,12 +475,13 @@ PanelWindow {
         return win._sdfSlot({
             "side": island.descriptor.barSide,
             "body": island.body,
+            // a tethered end has no fillet into the bar and a far fillet into the screen's side (connectorRadii)
             "radii": {
                 "farCr": 0,
-                "startCr": island.connector,
-                "endCr": island.connector,
-                "farStartCr": 0,
-                "farEndCr": 0,
+                "startCr": island.radii.start,
+                "endCr": island.radii.end,
+                "farStartCr": island.radii.farStart,
+                "farEndCr": island.radii.farEnd,
                 "surfaceRadius": island.radius
             }
         });
@@ -493,13 +554,16 @@ PanelWindow {
     readonly property int cutoutWidth: Math.max(0, win._windowRegionWidth - win.cutoutLeftInset - win.cutoutRightInset)
     readonly property int cutoutHeight: Math.max(0, win._windowRegionHeight - win.cutoutTopInset - win.cutoutBottomInset)
     readonly property int cutoutRadius: {
-        const requested = win._regionInt(SettingsData.frameRounding);
+        // on demand only the bar is drawn: a straight strip, its corners square
+        const requested = (SettingsData.frameOnDemand ?? false) ? 0 : win._regionInt(SettingsData.frameRounding);
         const maxRadius = Math.floor(Math.min(win.cutoutWidth, win.cutoutHeight) / 2);
         return Math.max(0, Math.min(requested, maxRadius));
     }
 
     readonly property bool _blurSurfacesActive: BlurService.enabled && SettingsData.frameBlurEnabled && win._frameActive
-    readonly property int _blurCutoutCompensation: Theme.frameSurfaceColor.a <= 0.2 ? 1 : 0
+    // an untinted frame keeps its blur a pixel inside the bar's edge only when that edge falls between device pixels:
+    // on the grid the pixel would show as an unblurred seam between the bar and what grows from it
+    readonly property int _blurCutoutCompensation: Resolver.frameBlurCompensation(Theme.frameSurfaceColor.a, [win.cutoutTopInset, win.cutoutBottomInset, win.cutoutLeftInset, win.cutoutRightInset], win._dpr)
     readonly property int _blurCutoutLeft: Math.max(0, win.cutoutLeftInset - win._blurCutoutCompensation)
     readonly property int _blurCutoutTop: Math.max(0, win.cutoutTopInset - win._blurCutoutCompensation)
     readonly property int _blurCutoutRight: Math.min(win._windowRegionWidth, win._windowRegionWidth - win.cutoutRightInset + win._blurCutoutCompensation)
@@ -540,7 +604,8 @@ PanelWindow {
         Region {
             id: _popoutBodyBlurAnchor
 
-            readonly property bool _active: win._blurSurfacesActive && win._popoutDescriptor.visible
+            // an untinted body blurs itself, on the popout's own window (ConnectedBodyBlur)
+            readonly property bool _active: win._blurSurfacesActive && win._popoutDescriptor.visible && !Theme.connectedBodiesBlurThemselves
 
             radius: win._surfaceRadius
             x: _active ? Math.round(win._popoutBodyGeometry.x) : 0
@@ -632,6 +697,10 @@ PanelWindow {
         }
         DockBlurRegion {
             dockSurface: win._islandSurface
+        }
+        DockBlurRegion {
+            // an untinted osd blurs itself, on its own window
+            dockSurface: Theme.connectedBodiesBlurThemselves ? null : win._osdSurface
         }
 
         Region {
@@ -911,6 +980,20 @@ PanelWindow {
                     "farStartCr": win._effectiveNotifFarStartCcr,
                     "farEndCr": win._effectiveNotifFarEndCcr,
                     "surfaceRadius": win._surfaceRadius
+                }
+            });
+        const osd = win._osdSurface;
+        if (osd)
+            arr.push({
+                "side": osd.descriptor.barSide,
+                "body": osd.body,
+                "radii": {
+                    "farCr": osd.connector,
+                    "startCr": osd.connector,
+                    "endCr": osd.connector,
+                    "farStartCr": 0,
+                    "farEndCr": 0,
+                    "surfaceRadius": osd.radius
                 }
             });
         for (const surface of win._dockSurfaces) {

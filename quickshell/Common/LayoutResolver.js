@@ -61,6 +61,61 @@ function islandReserve(config, defaults) {
     return islandMetrics(config, defaults).reserve;
 }
 
+// The end of the bar an island's sheet is tethered to, as dms's popouts close their gap to a frame side: an island at
+// its section's outer end (the last of the right-hand widgets, the first of the left-hand ones) grows its sheet out of
+// that end of the band, flush with the screen's edge ("start", "end", or "" for neither).
+function islandTetheredEnd(config) {
+    const ids = key => (config?.[key] ?? []).filter(entry => typeof entry === "string" || entry?.enabled !== false).map(entry => typeof entry === "string" ? entry : entry?.id);
+    const right = ids("rightWidgets");
+    if (right.length && right[right.length - 1] === "island")
+        return "end";
+    const left = ids("leftWidgets");
+    return left.length && left[0] === "island" ? "start" : "";
+}
+
+// The sheet's clearance from each end of the band: none at a tethered end.
+function islandAlongMargins(flushEnd, margin) {
+    return { "start": flushEnd === "start" ? 0 : margin, "end": flushEnd === "end" ? 0 : margin };
+}
+
+// A sheet's corners [topLeft, topRight, bottomLeft, bottomRight] on a bar edge: `near` where it meets the bar, `far`
+// away from it, and square where it meets the screen's side at a tethered end.
+function islandSheetRadii(edge, near, far, flushEnd) {
+    let radii;
+    switch (edge) {
+    case "bottom":
+        radii = [far, far, near, near];
+        break;
+    case "left":
+        radii = [near, far, near, far];
+        break;
+    case "right":
+        radii = [far, near, far, near];
+        break;
+    default:
+        radii = [near, near, far, far];
+    }
+    if (!flushEnd)
+        return radii;
+    const vertical = edge === "left" || edge === "right";
+    // the corners along the tethered end: its right side on a horizontal bar, its bottom on a vertical one
+    const corners = vertical ? (flushEnd === "end" ? [2, 3] : [0, 1]) : (flushEnd === "end" ? [1, 3] : [0, 2]);
+    for (const i of corners)
+        radii[i] = 0;
+    return radii;
+}
+
+// An untinted frame keeps its blur a pixel inside the bar's edge, so the blur can't spill over the windows below; with
+// the edge on a whole device pixel there is nothing to spill, and the pixel would show as an unblurred seam between the
+// bar and what grows from it.
+function frameBlurCompensation(surfaceAlpha, insets, dpr) {
+    if (surfaceAlpha > 0.2)
+        return 0;
+    const scale = dpr || 1;
+    const onGrid = (insets || []).every(inset => Math.abs(inset * scale - Math.round(inset * scale)) < 0.001);
+    return onGrid ? 0 : 1;
+}
+
 function isIsland(config) {
     return config.island === true || config.dot === true;
 }
@@ -182,6 +237,7 @@ function resolveScreen(inputs, screen, options) {
             occupancy: offset,
             reservation: Math.max(frameStyled ? options.frameThickness : 0, reservation),
             frameReservation: shown.length ? Math.max(options.frameThickness, offset) : options.frameThickness,
+            hasShownBar: shown.length > 0,
             overviewFrameReservation: active.length ? Math.max(options.frameThickness, offset) : options.frameThickness,
             frameExclusionEnabled: frameStyled && (!shown.length || (frameHosted && !shown.some(input => input.config.useOverlayLayer)))
         };

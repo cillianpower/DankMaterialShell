@@ -410,7 +410,7 @@ Singleton {
     onFrameLauncherArcExtenderChanged: saveSettings()
     property bool frameLauncherEdgeHover: Spec.SPEC.frameLauncherEdgeHover.def
     onFrameLauncherEdgeHoverChanged: saveSettings()
-    readonly property string frameModalEmergeSide: frameLauncherEmergeSide === "top" ? "bottom" : "top"
+    readonly property string frameModalEmergeSide: frameLauncherEmergeSide === "top" ? (frameSurfacesFromTop ? "top" : "bottom") : "top"
     property string frameMode: Spec.SPEC.frameMode.def
     onFrameModeChanged: {
         saveSettings();
@@ -3044,6 +3044,9 @@ Singleton {
     readonly property real frameBarContentGapExtra: Math.max(0, frameBarContentGap - frameThickness)
 
     function frameEdgeReservation(screen, edge) {
+        // on demand there is no frame but the bar: an edge without one has no thickness, so surfaces meet the screen's edge
+        if (frameOnDemand && !(ShellLayout.edge(screen, edge)?.hasShownBar ?? false))
+            return 0;
         return ShellLayout.frameReservation(screen, edge);
     }
 
