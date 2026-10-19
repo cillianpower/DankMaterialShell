@@ -90,7 +90,7 @@ Item {
         if (!surface.motionRunning)
             root.heldEditSurfaceHeight = root.editSurfaceHeight;
     }
-    readonly property real compactTargetSize: surface.descriptorAlong(controller.compactTarget)
+    readonly property real compactTargetSize: surface.descriptorAlong(controller.slotCompactTarget)
     // Summed by hand so every ancestor offset is a binding dependency; mapToItem goes stale when a section re-centres.
     readonly property real slotCentre: {
         let item = root.slotItem;
@@ -101,6 +101,8 @@ Item {
             pos += root.isVertical ? item.y : item.x;
         return item ? pos : NaN;
     }
+    // an island at its section's outer end grows its sheet out of that end of the bar, flush with the screen's edge
+    readonly property string flushEnd: root.embedded && !root.freeMode ? Resolver.islandTetheredEnd(root.barConfig) : ""
     readonly property real anchorAlong: isNaN(root.slotCentre) ? 0 : root.slotCentre - (root.isVertical ? root.height : root.width) / 2
     onExpandedChanged: {
         if (root.dotMode && root.expanded && !controller.transientActive && root.setting("islandNotificationBadgeClearOnOpen"))
@@ -336,6 +338,9 @@ Item {
             "visible": true,
             "presented": controller.expanded,
             "surfaceRadius": Theme.connectedSurfaceRadius,
+            // tethered to the screen's edge at that end: no fillet there, the frame meets it square
+            "omitStartConnector": root.flushEnd === "start",
+            "omitEndConnector": root.flushEnd === "end",
             "bodyRect": root.surfaceBodyRect()
         }, false);
     }
@@ -403,6 +408,11 @@ Item {
         id: controller
 
         onKeyboardDismissRequestedChanged: root.requestKeyboardFocus()
+        // a page changed while open (left, right): its face takes the keyboard, or escape and its keys go nowhere
+        onActiveActivityChanged: {
+            if (expanded && keyboardDismissRequested)
+                root.requestKeyboardFocus();
+        }
         onLauncherSessionActiveChanged: {
             if (!launcherSessionActive)
                 islandTransientSurfaces.closeAll();
@@ -418,6 +428,9 @@ Item {
         dotMode: root.dotMode
         embedded: root.embedded
         notch: root.notch
+        flushEnd: root.flushEnd
+        clockTimeHost: SettingsData.showSeconds && SettingsData.frameEnabled && root.embedded ? clockTime : null
+        motionRunning: root.motionRunning
         dotSize: root.dotSize * root.freeScale
         interactionMode: !root.freeMode && root.setting("islandInteractionMode") === "hybrid" ? "hybrid" : "click"
         inputSuspended: PopoutManager.screenshotActive
@@ -497,6 +510,7 @@ Item {
         anchorY: root.anchorY
         anchorSnaps: root.anchorSnaps
         anchorAlong: root.anchorAlong
+        flushEnd: root.flushEnd
         nearInset: root.nearInset
         bandAlongStart: root.bandAlongStart
         bandAlongEnd: root.bandAlongEnd
@@ -535,6 +549,12 @@ Item {
             controller: controller
             iconName: root.setting("islandFreeIcon")
         }
+    }
+
+    // agartha: the face's ticking time, on a surface of its own (a clock in the frame redraws the whole screen)
+    ClockTimeOverlay {
+        id: clockTime
+        enabled: SettingsData.showSeconds && SettingsData.frameEnabled && root.embedded
     }
 
     FocusScope {

@@ -3,6 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Modals.Clipboard
+import "../../Common/LayoutResolver.js" as Resolver
+import "../../Common/IslandPages.js" as IslandPages
 import qs.Modals.DLauncherV2.Components
 import qs.Modules.ControlCenter
 import qs.Modules.DBar
@@ -43,6 +45,21 @@ QtObject {
     property string launcherPendingQuery: ""
     property string launcherPendingMode: ""
     property string controlCenterPendingSection: ""
+    // the home face's groups as it shows them, in order (set by the face): Left and Right walk the pages they open
+    property var homeFaceGroups: []
+    // the surface the face's ticking time draws on, when it has one (a ClockTimeOverlay, set by the host)
+    property var clockTimeHost: null
+    // the island's surface is moving (set by the host)
+    property bool motionRunning: false
+    // a bar's island keeps its home face on the bar while one of its pages is open, as a menu bar item stays while its
+    // menu is open: the face is the page indicator, the open page's group lit, and a click on another group switches
+    readonly property bool homeFacePinned: embedded && !freeMode && !transientActive && (expanded || closingToFace)
+    // a page closing back onto the face: the face stays put through the motion rather than fading back in
+    readonly property bool closingToFace: !expanded && motionRunning && (activeActivity === "home" || isDestination(activeActivity))
+    readonly property string litFaceGroup: homeFacePinned && expanded ? IslandPages.litGroup(homeFaceGroups, {
+            "activity": activeActivity,
+            "section": controlCenterPendingSection
+        }, mediaAvailable) : ""
     property bool notificationExpandAllowed: false
     property bool keyboardYielded: false
     property real alongOffset: 0
@@ -408,10 +425,13 @@ QtObject {
     readonly property real mediaCompactLength: Math.ceil(Math.max(1, mediaContentLength))
 
     // Corners touching the attached screen edge stay tighter than the ones facing the desktop.
+    // a sheet tethered to one end of the bar (Resolver.islandTetheredEnd) is square where it meets the screen's side
+    property string flushEnd: ""
+
     function sheetRadii() {
         if (root.freeMode)
             return [root.cornerRadius, root.cornerRadius, root.cornerRadius, root.cornerRadius];
-        return root.edgeRadii(root.embedded || root.notch ? 0 : root.edgeCornerRadius, root.cornerRadius);
+        return Resolver.islandSheetRadii(root.edge, root.embedded || root.notch ? 0 : root.edgeCornerRadius, root.cornerRadius, root.flushEnd);
     }
 
     // [topLeft, topRight, bottomLeft, bottomRight] with `near` on the corners touching the edge.
@@ -520,6 +540,9 @@ QtObject {
     }
 
     readonly property var compactTarget: compactTargetFor(activeActivity)
+    // agartha: what the bar's slot for this island reserves. an open sheet hides the compact face, so the slot keeps the
+    // face it rests on, and opening a page moves neither the face (as it fades) nor the bar
+    readonly property var slotCompactTarget: compactTargetFor(expanded || closingToFace ? idleActivity() : activeActivity)
     function expandedTargetFor(activityId) {
         switch (activityId) {
         case "home":
@@ -820,7 +843,28 @@ QtObject {
         return requestActivity("powermenu", true, true);
     }
 
+    // a page the face opens, as its click opens it
+    function openPage(page, shouldExpand) {
+        if (page.activity === "controlcenter")
+            return requestControlCenter(page.section, false);
+        if (!requestActivity(page.activity, shouldExpand, shouldExpand))
+            return false;
+        if (page.activity === "home" || page.activity === "media")
+            mediaPreferred = page.activity === "media";
+        return true;
+    }
+
     function cycleActivity(direction, shouldExpand) {
+        // agartha: a bar's island walks the pages its face's groups open, in the face's order (Ctrl+Left and
+        // Ctrl+Right, Ctrl+Tab; the island's other pages are reached by mouse)
+        const pages = root.embedded ? IslandPages.facePages(root.homeFaceGroups, root.mediaAvailable) : [];
+        if (pages.length) {
+            const next = IslandPages.stepPage(pages, {
+                "activity": activeActivity,
+                "section": controlCenterPendingSection
+            }, direction);
+            return next ? root.openPage(next, shouldExpand) : false;
+        }
         const activities = ["home"];
         if (mediaAvailable)
             activities.push("media");

@@ -7,6 +7,7 @@ import qs.Modules.DDash
 import qs.Modules.DIsland.Activities
 import qs.Services
 import qs.Widgets
+import "../../Common/LayoutResolver.js" as Resolver
 
 Item {
     id: root
@@ -36,6 +37,8 @@ Item {
     property real freeMargin: 8
     // Measured from the band centre, not the band start.
     property real anchorAlong: 0
+    // the end of the band a sheet is tethered to, with no clearance there ("start", "end" or "")
+    property string flushEnd: ""
     property real nearInset: 0
     property real bandAlongStart: 0
     property real bandAlongEnd: root.alongExtent
@@ -202,10 +205,11 @@ Item {
 
     // A compact face keeps its slot right up to the band edge; only a sheet that outgrows the slot keeps a margin.
     function clampAnchored(offset, size) {
-        const margin = size > root.descriptorAlong(root.controller.compactTarget) ? Theme.spacingS : 0;
+        const sheet = size > root.descriptorAlong(root.controller.compactTarget);
+        const margins = Resolver.islandAlongMargins(sheet ? root.flushEnd : "", sheet ? Theme.spacingS : 0);
         const centre = root.alongExtent / 2;
-        const low = root.bandAlongStart + margin + size / 2 - centre;
-        const high = root.bandAlongEnd - margin - size / 2 - centre;
+        const low = root.bandAlongStart + margins.start + size / 2 - centre;
+        const high = root.bandAlongEnd - margins.end - size / 2 - centre;
         return low > high ? (root.bandAlongStart + root.bandAlongEnd) / 2 - centre : Math.max(low, Math.min(offset, high));
     }
 
