@@ -7,6 +7,7 @@ import qs.Modules.ControlCenter
 import qs.Modules.ControlCenter.Widgets
 import qs.Services
 import qs.DCommon.Widgets
+import "../../../Common/CcPages.js" as CcPages
 
 Item {
     id: root
@@ -28,6 +29,7 @@ Item {
     readonly property bool showPins: screenName.length > 0 && multipleDevices
 
     signal deviceNameChanged(string newDeviceName)
+    signal navigateRequested(string section)
 
     function getScreenPinKey() {
         if (!screenName)
@@ -213,6 +215,34 @@ Item {
                                 onIncrement: () => SessionData.setBrightnessExponent(deviceItem.deviceName, Math.min(CcMetrics.brightnessExponentMax, Math.round((deviceItem.exponent + CcMetrics.brightnessExponentStep) * 10) / 10))
                             }
                         }
+                    }
+                }
+            }
+
+            // the devices' own controls, from plugins ("controlCenterPage" in a plugin.json): a layer down
+            CcSectionLabel {
+                text: I18n.tr("Device Settings")
+                visible: devicePages.count > 0
+            }
+
+            CcGroup {
+                visible: devicePages.count > 0
+
+                Repeater {
+                    id: devicePages
+                    model: CcPages.pagesForDevices(Object.values(PluginService.loadedPlugins), "brightness", root.devices.map(device => ({
+                                "text": [device.name, BrightnessService.deviceTitle(device)].join(" "),
+                                "title": BrightnessService.deviceTitle(device)
+                            })))
+
+                    CcListRow {
+                        required property var modelData
+
+                        iconName: modelData.icon
+                        title: modelData.title
+                        clickable: true
+                        showChevron: true
+                        onClicked: root.navigateRequested(modelData.section)
                     }
                 }
             }

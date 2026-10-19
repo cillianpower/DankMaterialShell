@@ -27,11 +27,15 @@ Item {
     property alias valueOverride: slider.valueOverride
     property alias wheelStep: slider.wheelStep
     property bool sliderEnabled: true
+    // a chevron at the row's end opens the control's page: everything else about it
+    property bool hasPage: false
     property alias isDragging: slider.isDragging
     readonly property bool tall: height >= CcMetrics.gridRowUnit * 2
     readonly property bool vertical: tall && width < height
     readonly property bool showLabel: tall && !vertical && width >= CcMetrics.expandedTileMinWidth
     readonly property bool showNumber: tall && (!vertical || height >= CcMetrics.gridRowUnit * 3)
+    // a strip row shows its level as a number at its end
+    readonly property bool showTrailingValue: !tall && SettingsData.minimalInfo
     readonly property real bodyRadius: tall ? CcMetrics.tallTileRadius : Theme.cornerRadiusM
     readonly property real contentPadding: tall ? (vertical ? Theme.spacingS : Theme.spacingM) : 0
     readonly property real actionSize: Math.min(compact ? Theme.minimumTouchTargetSize : Math.max(Theme.minimumTouchTargetSize, CcMetrics.iconBoxSize), width - contentPadding * 2, tall ? Math.min(CcMetrics.tileHeight, height - contentPadding * 2 - Theme.minimumTouchTargetSize - (vertical ? Theme.spacingS : Theme.spacingM)) : height)
@@ -104,12 +108,46 @@ Item {
             }
         }
 
+        DActionButton {
+            id: chevron
+            objectName: "sliderPage"
+            anchors.right: parent.right
+            y: root.tall ? 0 : (parent.height - height) / 2
+            visible: root.hasPage
+            width: visible ? buttonSize : 0
+            buttonSize: Theme.buttonHeightXS
+            iconSize: Theme.iconSizeMedium
+            iconName: root.LayoutMirroring.enabled ? "chevron_left" : "chevron_right"
+            iconColor: Theme.surfaceVariantText
+            enabled: root.interactive
+            tooltipText: I18n.tr("More")
+            Accessible.name: I18n.tr("More")
+            onClicked: root.expandClicked()
+        }
+
+        NumericText {
+            id: trailingValue
+            anchors.right: root.tall ? parent.right : chevron.left
+            anchors.rightMargin: root.hasPage && !root.tall ? Theme.spacingXS : 0
+            anchors.verticalCenter: parent.verticalCenter
+            width: root.showTrailingValue ? reservedWidth : 0
+            visible: root.showTrailingValue
+            readonly property string unit: slider.unit || "%"
+            text: Math.round(slider.valueOverride >= 0 ? slider.valueOverride : slider.value) + unit
+            reserveText: Math.round(slider.maximum) + unit
+            font.pixelSize: Theme.fontSizeSmall
+            color: root.sliderEnabled ? Theme.surfaceVariantText : Theme.onSurface_38
+            horizontalAlignment: Text.AlignRight
+            verticalAlignment: Text.AlignVCenter
+        }
+
         Item {
             id: trackArea
             objectName: "sliderTrackArea"
             anchors.left: parent.left
             anchors.leftMargin: root.tall ? 0 : action.width + Theme.spacingS
-            anchors.right: parent.right
+            anchors.right: root.showTrailingValue ? trailingValue.left : root.hasPage && !root.tall ? chevron.left : parent.right
+            anchors.rightMargin: root.showTrailingValue || (root.hasPage && !root.tall) ? Theme.spacingS : 0
             y: root.vertical ? (root.showNumber ? labels.height + Theme.spacingS : 0) : root.tall ? action.height + Theme.spacingM : 0
             height: Math.max(0, (root.vertical ? action.y - Theme.spacingS : parent.height) - y)
 

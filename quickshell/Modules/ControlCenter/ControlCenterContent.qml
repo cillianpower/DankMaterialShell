@@ -10,6 +10,7 @@ import qs.DCommon.Widgets
 import qs.Widgets
 import "./utils/sections.js" as Sections
 import "./utils/widgets.js" as WidgetUtils
+import "../../Common/CcPages.js" as CcPages
 
 FocusScope {
     id: root
@@ -51,6 +52,8 @@ FocusScope {
         const total = CcMetrics.sheetPadding * 2 + heldGridHeight;
         if (detailPage.shownSection === "")
             return total;
+        if (detailPage.inPlace)
+            return detailPage.inPlaceHeight;
         return Math.max(total, detailPage.topInset + detailPage.minimumHeight + CcMetrics.detailDialogInset);
     }
     property Item detailReturnFocus: null
@@ -106,6 +109,7 @@ FocusScope {
     Component.onCompleted: {
         WidgetUtils.ensureEditButton();
         syncAudioRef(live);
+        seedParentPage();
     }
     Component.onDestruction: syncAudioRef(false)
     onPlacedWidgetIdsChanged: WidgetUtils.ensureEditButton()
@@ -334,9 +338,20 @@ FocusScope {
     readonly property bool editMode: host.editMode
 
     onExpandedSectionChanged: {
-        if (expandedSection !== "")
+        if (expandedSection === "") {
+            pageHistory = [];
             return;
-        pageHistory = [];
+        }
+        seedParentPage();
+    }
+
+    // a plugin's page opened straight from the bar keeps the page it sits under one layer up
+    function seedParentPage() {
+        if (expandedSection === "" || pageHistory.length > 0)
+            return;
+        const parent = CcPages.parentSection(expandedSection, Object.values(PluginService.loadedPlugins), SettingsData.controlCenterWidgets || []);
+        if (parent)
+            pageHistory = [parent];
     }
 
     onEditModeChanged: {
@@ -440,7 +455,8 @@ FocusScope {
 
                 width: parent.width
                 height: Math.max(root.gridHeight, root.heldGridHeight)
-                opacity: CcMetrics.hideCoveredContent ? 1 - root.coveredAmount : 1
+                opacity: detailPage.inPlace || CcMetrics.hideCoveredContent ? 1 - root.coveredAmount : 1
+                visible: opacity > 0
 
                 CcTileGrid {
                     id: widgetGrid
@@ -520,6 +536,7 @@ FocusScope {
         z: 1
         anchors.fill: parent
         section: root.host.expandedSection ?? ""
+        instantEnter: root.host.openingOnPage ?? false
         topInset: CcMetrics.sheetPadding
         cornerRadii: root.surfaceCornerRadii
         coverage: Math.max(codecSelectorLoader.item?.presence ?? 0, portSelectorLoader.item?.presence ?? 0)
@@ -533,6 +550,7 @@ FocusScope {
         onBackRequested: root.goBack()
         onCollapseRequested: root.host.collapseAll()
         onCloseRequested: root.host.close()
+        onNavigateRequested: section => root.navigateTo(section)
         onDismissed: {
             const target = root.detailReturnFocus;
             root.detailReturnFocus = null;

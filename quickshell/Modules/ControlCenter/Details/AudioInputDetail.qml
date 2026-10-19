@@ -7,6 +7,7 @@ import qs.Modules.ControlCenter
 import qs.Modules.ControlCenter.Widgets
 import qs.Services
 import qs.DCommon.Widgets
+import "../../../Common/CcPages.js" as CcPages
 import "../../../Common/QmlUtils.js" as QmlUtils
 
 Item {
@@ -16,6 +17,8 @@ Item {
 
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
+
+    signal navigateRequested(string section)
 
     readonly property string title: I18n.tr("Audio Input")
     readonly property var pinnedInputs: QmlUtils.normalizePinList((CacheData.audioInputDevicePins || {})["preferredInput"])
@@ -100,6 +103,34 @@ Item {
                             pinned: root.pinnedInputs.includes(deviceRow.modelData.name)
                             onToggled: root.togglePin(deviceRow.modelData.name)
                         }
+                    }
+                }
+            }
+
+            // the devices' own controls, from plugins ("controlCenterPage" in a plugin.json): a layer down
+            CcSectionLabel {
+                text: I18n.tr("Device Settings")
+                visible: devicePages.count > 0
+            }
+
+            CcGroup {
+                visible: devicePages.count > 0
+
+                Repeater {
+                    id: devicePages
+                    model: CcPages.pagesForDevices(Object.values(PluginService.loadedPlugins), "audioInput", AudioService.allNodes.filter(node => node.audio && !node.isSink && !node.isStream).map(node => ({
+                                "text": [node.name, node.description, AudioService.displayName(node)].join(" "),
+                                "title": AudioService.displayName(node)
+                            })))
+
+                    CcListRow {
+                        required property var modelData
+
+                        iconName: modelData.icon
+                        title: modelData.title
+                        clickable: true
+                        showChevron: true
+                        onClicked: root.navigateRequested(modelData.section)
                     }
                 }
             }

@@ -51,6 +51,7 @@ CcSliderRow {
     maximum: BrightnessService.brightnessMaximum(targetDevice)
 
     onIconClicked: expandClicked()
+    hasPage: (widgetData?.id ?? "") === "brightnessSlider"
 
     onSliderValueChanged: newValue => {
         if (!BrightnessService.brightnessAvailable || !targetDeviceName)

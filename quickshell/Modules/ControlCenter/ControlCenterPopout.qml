@@ -134,12 +134,18 @@ DPopout {
 
     onBackgroundClicked: close()
 
+    // true while the panel opens straight onto a page, so the page is there from the first frame, not faded in over
+    // the grid
+    property bool openingOnPage: false
+
     onShouldBeVisibleChanged: {
         if (shouldBeVisible) {
             finishClose.cancel();
             openWindow.cancel();
             requestedWindow = "";
+            openingOnPage = pendingSection !== "";
             expandedSection = pendingSection;
+            openingOnPage = false;
             pendingSection = "";
             Qt.callLater(() => contentLoader.item?.forceActiveFocus());
             return;
