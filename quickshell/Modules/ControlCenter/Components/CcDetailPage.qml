@@ -6,6 +6,7 @@ import qs.Modules.ControlCenter
 import qs.Modules.ControlCenter.Details
 import qs.DCommon.Widgets
 import "../utils/sections.js" as Sections
+import "../../../Common/CcControls.js" as CcControls
 
 FocusScope {
     id: root
@@ -22,6 +23,11 @@ FocusScope {
     property vector4d cornerRadii: Qt.vector4d(Theme.windowRadius, Theme.windowRadius, Theme.windowRadius, Theme.windowRadius)
     property real coverage: 0
     property var runningToplevels: []
+    // the panel is opening straight onto this page: no fade in
+    property bool instantEnter: false
+    // in place: the page replaces the grid instead of covering it
+    readonly property bool inPlace: SettingsData.controlCenterPagesInPlace
+    readonly property real sideInset: inPlace ? CcMetrics.sheetPadding : CcMetrics.detailDialogInset
 
     signal dismissed
     signal backRequested
@@ -29,6 +35,8 @@ FocusScope {
     signal closeRequested
     signal codecSelectorRequested(var device)
     signal portSelectorRequested(var node)
+    // a page opening a deeper one (a device's own page); Back and Escape come back up
+    signal navigateRequested(string section)
 
     property string shownSection: ""
     property bool enterPending: false
@@ -37,10 +45,12 @@ FocusScope {
     readonly property var pageItem: pageLoader.item
     readonly property real pageHeight: (pageItem?.implicitHeight ?? 0) > 0 ? pageItem.implicitHeight : CcMetrics.preferredDetailHeight(shownSection, pageItem?.preferredHeight ?? 0)
     readonly property real contentHeight: pageHeight
-    readonly property real chromeHeight: header.height + CcMetrics.detailDialogPadding * 2
-    readonly property real maximumHeight: height - topInset - CcMetrics.detailDialogInset
+    readonly property real chromeHeight: header.height + (inPlace ? 0 : CcMetrics.detailDialogPadding * 2)
+    readonly property real maximumHeight: height - topInset - sideInset
+    // the panel's height for the page when it stands in the grid's place
+    readonly property real inPlaceHeight: topInset + chromeHeight + contentHeight + sideInset
     // plugin detail content may not scroll itself, so the panel grows to fit it
-    readonly property bool pageScrollsItself: !shownSection.startsWith("plugin_")
+    readonly property bool pageScrollsItself: !shownSection.startsWith("plugin_") || pageItem?.scrollsItself === true
     readonly property real minimumHeight: chromeHeight + (pageScrollsItself ? Math.min(contentHeight, CcMetrics.detailMinContentHeight) : pageHeight)
     readonly property string title: {
         const own = pageItem?.title ?? "";
@@ -75,8 +85,9 @@ FocusScope {
     function moveFocus(backwards) {
         const current = root.Window.window?.activeFocusItem ?? root;
         const next = current.nextItemInFocusChain(!backwards);
-        const target = root.containsItem(next) ? next : backwards ? closeButton : root.nextItemInFocusChain(true);
-        (root.containsItem(target) ? target : closeButton).forceActiveFocus(backwards ? Qt.BacktabFocusReason : Qt.TabFocusReason);
+        const edge = root.inPlace ? backButton : closeButton;
+        const target = root.containsItem(next) ? next : backwards ? edge : root.nextItemInFocusChain(true);
+        (root.containsItem(target) ? target : edge).forceActiveFocus(backwards ? Qt.BacktabFocusReason : Qt.TabFocusReason);
     }
 
     Shortcut {
@@ -143,9 +154,9 @@ FocusScope {
             return;
         }
         const opening = shownSection === "";
-        enterPending = opening && animationsEnabled;
+        enterPending = opening && animationsEnabled && !instantEnter;
         root.opacity = enterPending ? 0 : 1;
-        dialogSurface.entryScale = enterPending ? CcMetrics.popupEnterScale : 1;
+        dialogSurface.entryScale = enterPending && !inPlace ? CcMetrics.popupEnterScale : 1;
         shownSection = section;
         pageLoader.sourceComponent = _componentFor(section);
         (pageItem ?? root).forceActiveFocus();
@@ -201,14 +212,17 @@ FocusScope {
         bottomLeftRadius: root.cornerRadii.w
         color: Theme.scrimColor
         opacity: Theme.scrimAlpha
+        visible: !root.inPlace
     }
 
     MouseArea {
         anchors.fill: parent
+        // in place, only the page itself catches clicks
+        anchors.topMargin: root.inPlace ? root.topInset : 0
         hoverEnabled: true
         acceptedButtons: Qt.AllButtons
         onClicked: {
-            if (root.section !== "")
+            if (root.section !== "" && !root.inPlace)
                 root.backRequested();
         }
         onWheel: wheel => wheel.accepted = true
@@ -217,11 +231,11 @@ FocusScope {
     Rectangle {
         id: dialogSurface
 
-        x: CcMetrics.detailDialogInset
-        y: root.topInset + Math.max(0, (root.maximumHeight - height) / 2)
-        width: Math.max(0, root.width - CcMetrics.detailDialogInset * 2)
+        x: root.sideInset
+        y: root.topInset + (root.inPlace ? 0 : Math.max(0, (root.maximumHeight - height) / 2))
+        width: Math.max(0, root.width - root.sideInset * 2)
         height: Math.max(0, Math.min(root.chromeHeight + root.contentHeight, root.maximumHeight))
-        radius: Theme.cornerRadiusXL
+        radius: root.inPlace ? 0 : Theme.cornerRadiusXL
 
         Behavior on height {
             enabled: root.animationsEnabled && !root.transitioning && root.section !== ""
@@ -231,8 +245,8 @@ FocusScope {
                 easing.bezierCurve: Theme.expressiveCurves.standard
             }
         }
-        color: CcMetrics.dialogColor
-        border.width: Theme.layerOutlineWidth
+        color: root.inPlace ? "transparent" : CcMetrics.dialogColor
+        border.width: root.inPlace ? 0 : Theme.layerOutlineWidth
         border.color: Theme.outlineMedium
         property real entryScale: 1
         scale: Math.min(1, entryScale)
@@ -246,7 +260,7 @@ FocusScope {
             id: panel
 
             anchors.fill: parent
-            anchors.margins: CcMetrics.detailDialogPadding
+            anchors.margins: root.inPlace ? 0 : CcMetrics.detailDialogPadding
             opacity: CcMetrics.hideCoveredContent ? 1 - root.coverage : 1
 
             Item {
@@ -256,14 +270,28 @@ FocusScope {
                 anchors.top: parent.top
                 height: CcMetrics.pageHeaderHeight
 
-                StyledText {
+                DActionButton {
+                    id: backButton
+                    visible: root.inPlace
                     anchors.left: parent.left
-                    anchors.leftMargin: CcMetrics.rowPaddingH
+                    anchors.verticalCenter: parent.verticalCenter
+                    buttonSize: CcMetrics.headerActionSize
+                    iconName: "chevron_left"
+                    iconSize: CcMetrics.headerActionIconSize
+                    iconColor: Theme.surfaceText
+                    Accessible.name: I18n.tr("Back")
+                    onClicked: root.backRequested()
+                }
+
+                StyledText {
+                    anchors.left: root.inPlace ? backButton.right : parent.left
+                    anchors.leftMargin: root.inPlace ? Theme.spacingXS : CcMetrics.rowPaddingH
                     anchors.right: headerSlot.left
                     anchors.rightMargin: Theme.spacingM
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.title
                     font.pixelSize: CcMetrics.pageTitleSize
+                    font.weight: Theme.macosTypeScale ? Font.Bold : Theme.fontWeight
                     color: Theme.surfaceText
                     elide: Text.ElideRight
                     horizontalAlignment: Text.AlignLeft
@@ -271,7 +299,7 @@ FocusScope {
 
                 Item {
                     id: headerSlot
-                    anchors.right: closeButton.left
+                    anchors.right: root.inPlace ? parent.right : closeButton.left
                     anchors.rightMargin: Theme.spacingS
                     anchors.verticalCenter: parent.verticalCenter
                     width: childrenRect.width
@@ -280,6 +308,7 @@ FocusScope {
 
                 DActionButton {
                     id: closeButton
+                    visible: !root.inPlace
                     anchors.right: parent.right
                     anchors.rightMargin: CcMetrics.headerEdgeInset
                     anchors.verticalCenter: parent.verticalCenter
@@ -352,6 +381,10 @@ FocusScope {
         function onCloseRequested() {
             root.closeRequested();
         }
+
+        function onNavigateRequested(section) {
+            root.navigateRequested(section);
+        }
     }
 
     Component {
@@ -423,7 +456,8 @@ FocusScope {
     Component {
         id: pluginComponent
         PluginDetailShell {
-            pluginId: root.shownSection.startsWith("plugin_") ? root.shownSection.replace("plugin_", "") : ""
+            pluginId: CcControls.parseSection(root.shownSection).pluginId
+            subPage: CcControls.parseSection(root.shownSection).sub
             builtinInstance: root.shownSection.startsWith("builtin_") ? (root.model?.builtinInstances[root.shownSection] ?? null) : null
         }
     }

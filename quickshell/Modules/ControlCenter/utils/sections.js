@@ -10,6 +10,11 @@ function parse(section) {
 
 function sectionFor(widgetData) {
     const id = widgetData.id || ""
+    // the volume rows' chevrons open the audio pages
+    if (id === "volumeSlider")
+        return "audioOutput"
+    if (id === "inputVolumeSlider")
+        return "audioInput"
     if (id !== "diskUsage" && id !== "brightnessSlider")
         return id
     return id + "_" + (widgetData.instanceId || "default")
