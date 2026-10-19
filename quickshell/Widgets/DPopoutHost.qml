@@ -1833,6 +1833,16 @@ Item {
             readonly property real surfaceBottomRightRadius: root.usesConnectedSurfaceChrome && (contentContainer.barBottom || contentContainer.barRight) ? 0 : surfaceRadius
             readonly property vector4d surfaceCornerRadii: Qt.vector4d(surfaceTopLeftRadius, surfaceTopRightRadius, surfaceBottomRightRadius, surfaceBottomLeftRadius)
 
+            ConnectedBodyBlur {
+                targetWindow: contentWindow
+                active: root.frameOwnsConnectedChrome && Theme.connectedBodiesBlurThemselves && (root.shouldBeVisible || contentWindow.visible)
+                dpr: root.dpr
+                descriptor: active ? root._connectedChromeState() : ({
+                        visible: false,
+                        barSide: "top"
+                    })
+            }
+
             WindowBlur {
                 id: popoutBlur
                 targetWindow: contentWindow

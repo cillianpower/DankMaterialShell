@@ -23,6 +23,9 @@ Scope {
             exclusionSize: {
                 const layout = ShellLayout.forScreen(root.screen);
                 const band = layout?.edges[modelData];
+                // on demand, the frame draws over the windows: only an edge with a bar keeps its space
+                if ((SettingsData.frameOnDemand ?? false) && !(band?.hasShownBar ?? false))
+                    return 0;
                 const frameReservation = (layout?.manualPlacement ? band?.reservation : band?.frameReservation) ?? 0;
                 const config = SettingsData.dockConfigForScreenEdge(root.screen, modelData);
                 if (!CompositorService.frameHostsDockForConfig(root.screen, config))
