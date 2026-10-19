@@ -150,9 +150,17 @@ Singleton {
         brightnessChanged(true);
     }
 
+    // a ddc monitor can be missed at startup (its bus busy as the session comes up, with another ddc client); with no
+    // devices after connecting, look again a few times before settling for none
+    property bool _emptyRescanScheduled: false
+
     function updateFromBrightnessState(state) {
         if (!state || !state.devices) {
             return;
+        }
+        if (state.devices.length === 0 && !_emptyRescanScheduled) {
+            _emptyRescanScheduled = true;
+            rescanTimer.run([3000, 10000, 30000]);
         }
 
         const newMaxCache = Object.assign({}, deviceMaxCache);
@@ -559,6 +567,7 @@ Singleton {
                 brightnessAvailable = false;
                 return;
             }
+            root._emptyRescanScheduled = false;
             requestBrightnessState();
         }
 
