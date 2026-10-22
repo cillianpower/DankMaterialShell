@@ -10,6 +10,7 @@ import qs.Services
 import qs.DCommon.Common as DCommon
 import "../Common/OutputModel.js" as OutputModel
 import "../Common/BlurStrength.js" as BlurStrength
+import "../Common/ShellShadow.js" as ShellShadow
 
 Singleton {
     id: root
@@ -143,6 +144,17 @@ Singleton {
             root._lastGapValue = newGaps;
             generateNiriLayoutConfig();
         }
+    }
+
+    // niri's window shadow is one set of values the frame also draws: a change reaches niri's layout config
+    Connections {
+        target: SettingsData
+        enabled: CompositorService.isNiri
+        function onShellShadowSoftnessChanged() { generateNiriLayoutConfig(); }
+        function onShellShadowSpreadChanged() { generateNiriLayoutConfig(); }
+        function onShellShadowOffsetXChanged() { generateNiriLayoutConfig(); }
+        function onShellShadowOffsetYChanged() { generateNiriLayoutConfig(); }
+        function onShellShadowColorChanged() { generateNiriLayoutConfig(); }
     }
 
     Connections {
@@ -1302,10 +1314,17 @@ window-rule {
 
 `;
 
+        const shellShadowConfig = typeof SettingsData !== "undefined" ? {
+            "softness": SettingsData.shellShadowSoftness,
+            "spread": SettingsData.shellShadowSpread,
+            "offsetX": SettingsData.shellShadowOffsetX,
+            "offsetY": SettingsData.shellShadowOffsetY,
+            "color": SettingsData.shellShadowColor
+        } : undefined;
         const layoutLines = [];
         if (manageGaps)
             layoutLines.push(`    gaps ${gaps}`, "");
-        layoutLines.push("    border {", `        width ${borderSize}`, "    }", "", "    focus-ring {", `        width ${borderSize}`, "    }");
+        layoutLines.push("    border {", `        width ${borderSize}`, "    }", "", "    focus-ring {", `        width ${borderSize}`, "    }", "", ShellShadow.niriBlock(shellShadowConfig));
 
         const configContent = dmsWarning + `layout {
 ${layoutLines.join("\n")}

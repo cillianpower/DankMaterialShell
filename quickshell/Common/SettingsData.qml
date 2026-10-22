@@ -309,6 +309,17 @@ Singleton {
     onScrollbarsEnabledChanged: saveSettings()
     property int motionEffect: SettingsData.AnimationEffect.Standard
     onMotionEffectChanged: saveSettings()
+    // niri's window shadow, written to niri's layout config and drawn by the frame (Common/ShellShadow.js)
+    property real shellShadowSoftness: Spec.SPEC.shellShadowSoftness.def
+    onShellShadowSoftnessChanged: saveSettings()
+    property real shellShadowSpread: Spec.SPEC.shellShadowSpread.def
+    onShellShadowSpreadChanged: saveSettings()
+    property real shellShadowOffsetX: Spec.SPEC.shellShadowOffsetX.def
+    onShellShadowOffsetXChanged: saveSettings()
+    property real shellShadowOffsetY: Spec.SPEC.shellShadowOffsetY.def
+    onShellShadowOffsetYChanged: saveSettings()
+    property string shellShadowColor: Spec.SPEC.shellShadowColor.def
+    onShellShadowColorChanged: saveSettings()
     property bool m3ElevationEnabled: Spec.SPEC.m3ElevationEnabled.def
     onM3ElevationEnabledChanged: saveSettings()
     property int m3ElevationIntensity: Spec.SPEC.m3ElevationIntensity.def

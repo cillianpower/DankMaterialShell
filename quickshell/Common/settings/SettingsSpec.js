@@ -470,6 +470,21 @@ var LOCAL_SPEC = {
     motionEffect: {
         def: 0
     },
+    shellShadowSoftness: {
+        def: 30
+    },
+    shellShadowSpread: {
+        def: 5
+    },
+    shellShadowOffsetX: {
+        def: 0
+    },
+    shellShadowOffsetY: {
+        def: 5
+    },
+    shellShadowColor: {
+        def: "#0007"
+    },
     m3ElevationEnabled: {
         def: true
     },
