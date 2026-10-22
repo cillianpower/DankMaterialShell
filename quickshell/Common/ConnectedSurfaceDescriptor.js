@@ -155,3 +155,16 @@ function same(a, b, threshold) {
         && Math.abs(a.overflowBottom - b.overflowBottom) < epsilon
         && a.dockRetractSide === b.dockRetractSide;
 }
+
+// The shell is the user's focus while a surface they summoned is open: a popout, the right-hand panel (slideout), a modal
+// or the launcher (the modal slot), or an expanded island. Notifications, OSDs and the dock appear on their own and don't count.
+var FOCUS_KINDS = ["popout", "slideout", "modal", "launcher", "island"];
+
+function holdsUserFocus(descriptors) {
+    for (var i = 0; i < descriptors.length; i++) {
+        var d = descriptors[i];
+        if (d && d.visible && FOCUS_KINDS.indexOf(d.kind) >= 0)
+            return true;
+    }
+    return false;
+}
