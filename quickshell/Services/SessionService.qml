@@ -275,7 +275,7 @@ printf 'uwsm=%s\nelogind=%s\nloginctl=%s\nsystemctl=%s\nusermgr=%s\nhibernate=%s
         return args;
     }
 
-    // Restore pre-wrap Qt paths (Nix) so launched apps use their own.
+    // Restore wrapper paths so launched apps use their own Qt and graphics drivers.
     function restoreWrapperEnv(env) {
         const restore = (target, snapshot) => {
             const orig = Quickshell.env(snapshot);
@@ -285,6 +285,9 @@ printf 'uwsm=%s\nelogind=%s\nloginctl=%s\nsystemctl=%s\nusermgr=%s\nhibernate=%s
         };
         restore("NIXPKGS_QT6_QML_IMPORT_PATH", "DMS_ORIG_NIXPKGS_QT6_QML_IMPORT_PATH");
         restore("QT_PLUGIN_PATH", "DMS_ORIG_QT_PLUGIN_PATH");
+        restore("__EGL_VENDOR_LIBRARY_FILENAMES", "DMS_ORIG___EGL_VENDOR_LIBRARY_FILENAMES");
+        restore("GBM_BACKENDS_PATH", "DMS_ORIG_GBM_BACKENDS_PATH");
+        restore("LIBGL_DRIVERS_PATH", "DMS_ORIG_LIBGL_DRIVERS_PATH");
         return env;
     }
 
