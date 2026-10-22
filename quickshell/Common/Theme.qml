@@ -16,6 +16,7 @@ import qs.Services
 import qs.Modules.Greetd
 import "StockThemes.js" as StockThemes
 import "GSettings.js" as GSettings
+import "ShellShadow.js" as ShellShadow
 
 Singleton {
     id: root
@@ -1018,10 +1019,19 @@ Singleton {
     readonly property bool isFluidEffect: AnimVariants.isFluidEffect
     readonly property bool isDepthEffect: AnimVariants.isDepthEffect
     readonly property bool isConnectedEffect: AnimVariants.isConnectedEffect
+    // niri's window shadow, from the one set of values (sigma, spread, offset in logical px; color straight rgba)
+    readonly property var shellShadow: typeof SettingsData === "undefined" ? ShellShadow.params() : ShellShadow.params({
+        "softness": SettingsData.shellShadowSoftness,
+        "spread": SettingsData.shellShadowSpread,
+        "offsetX": SettingsData.shellShadowOffsetX,
+        "offsetY": SettingsData.shellShadowOffsetY,
+        "color": SettingsData.shellShadowColor
+    })
+    // the frame's corners are niri's window corners: one radius (windowRadius, which NiriService writes as geometry-corner-radius)
     readonly property real connectedCornerRadius: {
         if (typeof SettingsData === "undefined")
             return 12;
-        return FrameTransitionState.effectiveConnectedFrameModeActive ? SettingsData.frameRounding : windowRadius;
+        return windowRadius;
     }
     readonly property color connectedSurfaceColor: {
         if (typeof SettingsData === "undefined")

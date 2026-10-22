@@ -5143,14 +5143,14 @@
       "appearance",
       "bar",
       "border",
-      "corner",
       "frame",
       "panel",
-      "radius",
-      "rounding",
+      "size",
       "statusbar",
       "taskbar",
-      "topbar"
+      "thickness",
+      "topbar",
+      "width"
     ],
     "parentLabel": "Bar",
     "icon": "border_outer",
@@ -5497,27 +5497,6 @@
     ],
     "parentLabel": "Bar",
     "conditionKey": "islandEnabled"
-  },
-  {
-    "section": "frameRounding",
-    "label": "Radius",
-    "tabIndex": 6,
-    "category": "Appearance",
-    "keywords": [
-      "appearance",
-      "bar",
-      "border",
-      "corner",
-      "frame",
-      "panel",
-      "radius",
-      "rounding",
-      "statusbar",
-      "taskbar",
-      "topbar"
-    ],
-    "parentLabel": "Bar",
-    "conditionKey": "frameEnabled"
   },
   {
     "section": "islandSatellites",

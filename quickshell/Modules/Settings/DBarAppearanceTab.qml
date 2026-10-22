@@ -46,18 +46,6 @@ Item {
             visible: SettingsData.frameEnabled
 
             SettingsSliderRow {
-                settingKey: "frameRounding"
-                tags: ["frame", "border", "rounding", "radius", "corner"]
-                text: I18n.tr("Radius", "corner radius slider label")
-                unit: "px"
-                minimum: 0
-                maximum: 100
-                step: 1
-                value: SettingsData.frameRounding
-                onSliderDragFinished: v => SettingsData.set("frameRounding", v)
-            }
-
-            SettingsSliderRow {
                 settingKey: "frameThickness"
                 tags: ["frame", "border", "thickness", "size", "width"]
                 text: I18n.tr("Thickness")

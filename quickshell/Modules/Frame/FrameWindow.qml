@@ -555,7 +555,7 @@ PanelWindow {
     readonly property int cutoutHeight: Math.max(0, win._windowRegionHeight - win.cutoutTopInset - win.cutoutBottomInset)
     readonly property int cutoutRadius: {
         // on demand only the bar is drawn: a straight strip, its corners square
-        const requested = (SettingsData.frameOnDemand ?? false) ? 0 : win._regionInt(SettingsData.frameRounding);
+        const requested = (SettingsData.frameOnDemand ?? false) ? 0 : win._regionInt(Theme.windowRadius);
         const maxRadius = Math.floor(Math.min(win.cutoutWidth, win.cutoutHeight) / 2);
         return Math.max(0, Math.min(requested, maxRadius));
     }
@@ -1191,17 +1191,14 @@ PanelWindow {
         visible: win._connectedActive
         fragmentShader: Qt.resolvedUrl("../../Shaders/qsb/connected_arc.frag.qsb")
 
-        readonly property var _level: Theme.elevationLevel2
-        readonly property color _shadowTint: Theme.elevationShadowColor(_level)
-        readonly property var _ambient: Theme.elevationAmbient(_level)
+        readonly property var _shadow: Theme.shellShadow
         property real widthPx: width
         property real heightPx: height
         property real cutoutRadius: win.cutoutRadius
         property vector4d cutout: Qt.vector4d(win.cutoutLeftInset, win.cutoutTopInset, win.width - win.cutoutRightInset, win.height - win.cutoutBottomInset)
         property vector4d surfaceColor: Qt.vector4d(win._surfaceColor.r, win._surfaceColor.g, win._surfaceColor.b, win._surfaceColor.a)
-        property vector4d shadowColor: Qt.vector4d(_shadowTint.r, _shadowTint.g, _shadowTint.b, win._elevationShadow ? _shadowTint.a : 0)
-        property vector4d shadowParam: Qt.vector4d(Math.max(0, _level.blurPx), Math.max(0, _level.spreadPx), Theme.elevationOffsetXFor(_level, Theme.elevationLightDirection, 4), Theme.elevationOffsetYFor(_level, Theme.elevationLightDirection, 4))
-        property vector4d ambientParam: Qt.vector4d(_ambient.blurPx, _ambient.spreadPx, win._elevationShadow ? _ambient.alpha : 0, 0)
+        property vector4d shadowColor: Qt.vector4d(_shadow.color.r, _shadow.color.g, _shadow.color.b, win._elevationShadow ? _shadow.color.a : 0)
+        property vector4d shadowParam: Qt.vector4d(_shadow.sigma, _shadow.spread, _shadow.offsetX, _shadow.offsetY)
         property vector4d chromeRect0: win._sdfSlots[0].rect
         property vector4d chromeCorner0: win._sdfSlots[0].corner
         property vector4d chromeK0: win._sdfSlots[0].k

@@ -401,7 +401,7 @@ PanelWindow {
     function _connectedCornerClear() {
         if (isCenterPosition || SettingsData.frameCloseGaps)
             return 0;
-        return Theme.px(SettingsData.frameRounding, dpr) + Theme.px(Theme.connectedCornerRadius, dpr);
+        return Theme.px(Theme.windowRadius, dpr) + Theme.px(Theme.connectedCornerRadius, dpr);
     }
 
     function getTopMargin() {
