@@ -667,6 +667,8 @@ Singleton {
     property string typeScale: Spec.SPEC.typeScale.def
     property string density: Spec.SPEC.density.def
     property bool controlCenterPagesInPlace: Spec.SPEC.controlCenterPagesInPlace.def
+    // a slider row with a page (brightness, the audio devices) has a chevron at its end that opens it
+    property bool controlCenterSliderChevrons: Spec.SPEC.controlCenterSliderChevrons.def
     property bool surfaceTint: Spec.SPEC.surfaceTint.def
     // the launcher and the modals both come from the top, when the launcher does
     property bool frameSurfacesFromTop: Spec.SPEC.frameSurfacesFromTop.def

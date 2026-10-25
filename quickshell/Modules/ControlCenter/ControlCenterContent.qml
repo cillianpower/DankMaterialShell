@@ -456,7 +456,7 @@ FocusScope {
                 width: parent.width
                 height: Math.max(root.gridHeight, root.heldGridHeight)
                 opacity: detailPage.inPlace || CcMetrics.hideCoveredContent ? 1 - root.coveredAmount : 1
-                visible: opacity > 0
+                visible: !detailPage.inPlace || opacity > 0
 
                 CcTileGrid {
                     id: widgetGrid

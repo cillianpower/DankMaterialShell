@@ -1009,6 +1009,9 @@ var LOCAL_SPEC = {
     controlCenterPagesInPlace: {
         def: false
     },
+    controlCenterSliderChevrons: {
+        def: false
+    },
     surfaceTint: {
         def: false
     },

@@ -27,8 +27,10 @@ Item {
     property alias valueOverride: slider.valueOverride
     property alias wheelStep: slider.wheelStep
     property bool sliderEnabled: true
-    // a chevron at the row's end opens the control's page: everything else about it
+    // the control has a page (everything else about it); controlCenterSliderChevrons puts a chevron at the row's end
+    // that opens it
     property bool hasPage: false
+    readonly property bool showsPageChevron: hasPage && SettingsData.controlCenterSliderChevrons
     property alias isDragging: slider.isDragging
     readonly property bool tall: height >= CcMetrics.gridRowUnit * 2
     readonly property bool vertical: tall && width < height
@@ -113,7 +115,7 @@ Item {
             objectName: "sliderPage"
             anchors.right: parent.right
             y: root.tall ? 0 : (parent.height - height) / 2
-            visible: root.hasPage
+            visible: root.showsPageChevron
             width: visible ? buttonSize : 0
             buttonSize: Theme.buttonHeightXS
             iconSize: Theme.iconSizeMedium
@@ -128,7 +130,7 @@ Item {
         NumericText {
             id: trailingValue
             anchors.right: root.tall ? parent.right : chevron.left
-            anchors.rightMargin: root.hasPage && !root.tall ? Theme.spacingXS : 0
+            anchors.rightMargin: root.showsPageChevron && !root.tall ? Theme.spacingXS : 0
             anchors.verticalCenter: parent.verticalCenter
             width: root.showTrailingValue ? reservedWidth : 0
             visible: root.showTrailingValue
@@ -146,8 +148,8 @@ Item {
             objectName: "sliderTrackArea"
             anchors.left: parent.left
             anchors.leftMargin: root.tall ? 0 : action.width + Theme.spacingS
-            anchors.right: root.showTrailingValue ? trailingValue.left : root.hasPage && !root.tall ? chevron.left : parent.right
-            anchors.rightMargin: root.showTrailingValue || (root.hasPage && !root.tall) ? Theme.spacingS : 0
+            anchors.right: root.showTrailingValue ? trailingValue.left : root.showsPageChevron && !root.tall ? chevron.left : parent.right
+            anchors.rightMargin: root.showTrailingValue || (root.showsPageChevron && !root.tall) ? Theme.spacingS : 0
             y: root.vertical ? (root.showNumber ? labels.height + Theme.spacingS : 0) : root.tall ? action.height + Theme.spacingM : 0
             height: Math.max(0, (root.vertical ? action.y - Theme.spacingS : parent.height) - y)
 

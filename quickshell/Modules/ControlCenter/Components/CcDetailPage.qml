@@ -23,7 +23,7 @@ FocusScope {
     property vector4d cornerRadii: Qt.vector4d(Theme.windowRadius, Theme.windowRadius, Theme.windowRadius, Theme.windowRadius)
     property real coverage: 0
     property var runningToplevels: []
-    // the panel is opening straight onto this page: no fade in
+    // the panel is opening straight onto this page: in place, no fade in
     property bool instantEnter: false
     // in place: the page replaces the grid instead of covering it
     readonly property bool inPlace: SettingsData.controlCenterPagesInPlace
@@ -154,7 +154,7 @@ FocusScope {
             return;
         }
         const opening = shownSection === "";
-        enterPending = opening && animationsEnabled && !instantEnter;
+        enterPending = opening && animationsEnabled && !(inPlace && instantEnter);
         root.opacity = enterPending ? 0 : 1;
         dialogSurface.entryScale = enterPending && !inPlace ? CcMetrics.popupEnterScale : 1;
         shownSection = section;
