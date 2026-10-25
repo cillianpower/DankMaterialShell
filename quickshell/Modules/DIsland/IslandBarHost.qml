@@ -429,7 +429,7 @@ Item {
         embedded: root.embedded
         notch: root.notch
         flushEnd: root.flushEnd
-        clockTimeHost: SettingsData.showSeconds && SettingsData.frameEnabled && root.embedded ? clockTime : null
+        clockTimeHost: clockTime.enabled ? clockTime : null
         motionRunning: root.motionRunning
         dotSize: root.dotSize * root.freeScale
         interactionMode: !root.freeMode && root.setting("islandInteractionMode") === "hybrid" ? "hybrid" : "click"
@@ -551,10 +551,10 @@ Item {
         }
     }
 
-    // agartha: the face's ticking time, on a surface of its own (a clock in the frame redraws the whole screen)
+    // clockTimeOverlay: the face's ticking time, on a surface of its own (a clock in the frame redraws the whole screen)
     ClockTimeOverlay {
         id: clockTime
-        enabled: SettingsData.showSeconds && SettingsData.frameEnabled && root.embedded
+        enabled: SettingsData.clockTimeOverlay && SettingsData.showSeconds && SettingsData.frameEnabled && root.embedded
     }
 
     FocusScope {

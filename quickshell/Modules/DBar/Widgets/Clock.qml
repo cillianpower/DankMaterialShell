@@ -15,8 +15,8 @@ BasePill {
     readonly property int notificationCount: surfaceContext?.notificationCount ?? 0
     signal clockClicked
 
-    // agartha: a bar in the frame draws its ticking time on a surface of its own (ClockTimeOverlay)
-    readonly property bool detachTime: SettingsData.showSeconds && !root.isVerticalOrientation && (root.surfaceContext?.kind ?? "bar") === "bar" && (root.surfaceContext?.host?.frameHosted ?? false)
+    // clockTimeOverlay: a bar in the frame draws its ticking time on a surface of its own (ClockTimeOverlay)
+    readonly property bool detachTime: SettingsData.clockTimeOverlay && SettingsData.showSeconds && !root.isVerticalOrientation && (root.surfaceContext?.kind ?? "bar") === "bar" && (root.surfaceContext?.host?.frameHosted ?? false)
 
     ClockTimeOverlay {
         id: timeOverlay

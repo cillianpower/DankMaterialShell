@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import qs.Common
 
-// agartha: a clock in the frame shares the frame's one full-screen surface, which redraws whole, so a ticking time there
+// clockTimeOverlay: a clock in the frame shares the frame's one full-screen surface, which redraws whole, so a ticking time there
 // redraws the whole screen every second. This draws the time on a small surface of its own, laid exactly over the
 // clock that hands it the time (ClockContent.timeHost), and that clock keeps only a fixed, unseen placeholder: a tick
 // costs the time's own pixels.
@@ -87,12 +87,13 @@ Item {
                 width: root.timeItem?.width ?? implicitWidth
                 height: root.timeItem?.height ?? implicitHeight
                 text: drawn ? (clock.timeLines[0] ?? "") : ""
-                horizontalAlignment: Text.AlignLeft
+                // as the clock sets its own time (ClockContent.StackedLines)
+                horizontalAlignment: clock?.proportionalFigures ? Text.AlignLeft : Text.AlignHCenter
                 isMonospace: false
                 // the clock's opacity as it is this frame, through the colour (opacity itself would fade after it)
                 color: drawn ? Qt.rgba(clock.textColor.r, clock.textColor.g, clock.textColor.b, clock.textColor.a * overlay.at.opacity) : "transparent"
                 font.pixelSize: clock?.fontSize ?? Theme.fontSizeMedium
-                font.features: ({ "tnum": 0 })
+                font.features: clock?.proportionalFigures ? ({ "tnum": 0 }) : ({ "tnum": 1 })
             }
         }
     }

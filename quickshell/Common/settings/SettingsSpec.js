@@ -1024,6 +1024,9 @@ var LOCAL_SPEC = {
     clockProportionalFigures: {
         def: false
     },
+    clockTimeOverlay: {
+        def: false
+    },
     minimalInfo: {
         def: false
     },
