@@ -299,8 +299,8 @@ BasePill {
                         color: root.contentColor
                         anchors.verticalCenter: parent.verticalCenter
                         wrapMode: Text.NoWrap
-                        // title only (compact): a long title is shortened in the middle, keeping its start and its end
-                        elide: compactMode ? Text.ElideMiddle : Text.ElideRight
+                        // the minimum information, title only (compact): a long title keeps its start and its end
+                        elide: compactMode && SettingsData.minimalInfo ? Text.ElideMiddle : Text.ElideRight
                         maximumLineCount: 1
                         width: {
                             const sp = contentRow.spacing;
