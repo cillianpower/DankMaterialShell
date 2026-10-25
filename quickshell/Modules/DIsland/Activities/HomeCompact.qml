@@ -34,7 +34,7 @@ Item {
     readonly property int volumePercent: AudioService.sinkVolumePercent
     readonly property var groupIds: root.groupsForSide("left").concat(["clock"]).concat(root.groupsForSide("right"))
 
-    // agartha: the face's groups as shown, for the island's Left and Right (IslandController.cycleActivity)
+    // the face's groups as shown, for the menu bar face and its page keys (IslandController)
     Binding {
         target: root.controller
         property: "homeFaceGroups"
@@ -76,7 +76,7 @@ Item {
         if (!SettingsData.widgetOption("systemTray", root.trayWidgetData, "trayAutoOverflow"))
             return shown;
         const limit = Number(SettingsData.widgetOption("systemTray", root.trayWidgetData, "trayMaxVisibleItems") || 0);
-        // agartha: as on the bar's tray, -1 shows nothing but the overflow
+        // as on the bar's tray, -1 shows nothing but the overflow
         if (limit < 0)
             return 0;
         return limit > 0 ? Math.max(1, Math.min(shown, limit)) : shown;
@@ -243,7 +243,7 @@ Item {
     }
 
     function activateGroup(groupId) {
-        // agartha: with a page open, the face is its menu bar: the lit group closes its page, another switches to its own
+        // the menu bar face, with a page open: the lit group closes its page, another switches to its own
         if (root.controller.homeFacePinned) {
             if (root.controller.litFaceGroup === groupId) {
                 root.controller.requestCollapse();
@@ -395,9 +395,9 @@ Item {
         availableWidth: root.width
         dateColor: Theme.surfaceTextMedium
         separatorColor: Theme.primary
-        // agartha: in the frame, the ticking time draws on a surface of its own (ClockTimeOverlay, the island host's)
-        // while the face holds still: at rest, and pinned while a page opens, shows and closes. while it moves or
-        // gives way to something else, the frame redraws anyway
+        // clockTimeOverlay: in the frame, the ticking time draws on a surface of its own (the island host's) while the
+        // face holds still: at rest, and pinned while a page opens, shows and closes. while it moves or gives way to
+        // something else, the frame redraws anyway
         timeHost: root.controller.clockTimeHost
         detachWanted: !root.controller.transientActive && (root.controller.homeFacePinned || root.controller.activeActivity === "home" && !root.controller.expanded && !root.controller.motionRunning)
     }
@@ -440,7 +440,7 @@ Item {
 
         required property var group
 
-        // agartha: the clock's group too while a page is open (closed, a click on the clock is the island's own)
+        // the clock's group too while the menu bar face has a page open (closed, a click on the clock is the island's own)
         enabled: !group.isClock || root.controller.homeFacePinned
         controller: root.controller
         acceptedButtons: group.isTray ? Qt.NoButton : (Qt.LeftButton | Qt.MiddleButton)
@@ -540,7 +540,7 @@ Item {
             width: group.vertical ? root.slotSize : parent.width + Theme.spacingS
             height: group.vertical ? parent.height + Theme.spacingXS : root.slotSize
             radius: group.vertical ? Theme.cornerRadius : Theme.fullRadius(width, height)
-            // agartha: lit while its page is open (IslandController.litFaceGroup)
+            // the menu bar face: lit while its page is open (IslandController.litFaceGroup)
             readonly property bool lit: root.controller.litFaceGroup === group.groupId
             color: lit ? Theme.withAlpha(Theme.surfaceText, 0.16) : groupArea.containsMouse ? Theme.surfaceTextHover : "transparent"
             visible: lit || !group.isClock && !group.isTray && (group.vertical || !group.usesBattery)

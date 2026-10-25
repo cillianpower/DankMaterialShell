@@ -51,9 +51,11 @@ QtObject {
     property var clockTimeHost: null
     // the island's surface is moving (set by the host)
     property bool motionRunning: false
-    // a bar's island keeps its home face on the bar while one of its pages is open, as a menu bar item stays while its
-    // menu is open: the face is the page indicator, the open page's group lit, and a click on another group switches
-    readonly property bool homeFacePinned: embedded && !freeMode && !transientActive && (expanded || closingToFace)
+    // islandMenuBarFace: a bar's island keeps its home face on the bar while one of its pages is open, as a menu bar item
+    // stays while its menu is open: the face is the page indicator, the open page's group lit, and a click on another
+    // group switches
+    property bool menuBarFace: false
+    readonly property bool homeFacePinned: menuBarFace && embedded && !freeMode && !transientActive && (expanded || closingToFace)
     // a page closing back onto the face: the face stays put through the motion rather than fading back in
     readonly property bool closingToFace: !expanded && motionRunning && (activeActivity === "home" || isDestination(activeActivity))
     readonly property string litFaceGroup: homeFacePinned && expanded ? IslandPages.litGroup(homeFaceGroups, {
@@ -540,9 +542,9 @@ QtObject {
     }
 
     readonly property var compactTarget: compactTargetFor(activeActivity)
-    // agartha: what the bar's slot for this island reserves. an open sheet hides the compact face, so the slot keeps the
-    // face it rests on, and opening a page moves neither the face (as it fades) nor the bar
-    readonly property var slotCompactTarget: compactTargetFor(expanded || closingToFace ? idleActivity() : activeActivity)
+    // what the bar's slot for this island reserves. with the menu bar face an open sheet hides the compact face, so the
+    // slot keeps the face it rests on, and opening a page moves neither the face (as it fades) nor the bar
+    readonly property var slotCompactTarget: compactTargetFor(menuBarFace && (expanded || closingToFace) ? idleActivity() : activeActivity)
     function expandedTargetFor(activityId) {
         switch (activityId) {
         case "home":

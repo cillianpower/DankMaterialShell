@@ -41,6 +41,8 @@ var ISLAND_DEFAULTS = {
     islandSystemOsd: true,
     islandChargingPulse: true,
     islandHomeCompactTight: false,
+    // a bar's island keeps its home face on the bar while one of its pages is open, as a menu bar item does
+    islandMenuBarFace: false,
     islandHomeClockDisplay: "both",
     islandHomeVolumeDisplay: "both",
     islandHomeBrightnessDisplay: "both",

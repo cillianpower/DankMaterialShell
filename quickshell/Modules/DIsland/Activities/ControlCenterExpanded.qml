@@ -27,10 +27,11 @@ FocusScope {
         hostContract.expandedSection = "";
     }
 
-    // agartha: a click on another of the face's groups while the control centre is open (the face stays: IslandController
-    // .homeFacePinned) opens its section here
+    // a click on another of the face's groups while the control centre is open (the menu bar face stays:
+    // IslandController.homeFacePinned) opens its section here
     Connections {
         target: root.controller
+        enabled: root.controller.menuBarFace
         function onControlCenterPendingSectionChanged() {
             if (root.controller.expanded && root.controller.activeActivity === "controlcenter")
                 hostContract.expandedSection = root.controller.controlCenterPendingSection || "";

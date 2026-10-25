@@ -101,7 +101,7 @@ Item {
     }
 
     function compactOpacity(activity) {
-        // agartha: the home face stays on the bar while a page is open (IslandController.homeFacePinned), alone
+        // the menu bar face stays on the bar while a page is open (IslandController.homeFacePinned), alone
         if (root.controller.homeFacePinned)
             return activity === "home" ? 1 : 0;
         const incoming = root.renderedActivity === activity ? root.activityFade * root.compactFade : 0;
