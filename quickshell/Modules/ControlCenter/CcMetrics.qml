@@ -43,8 +43,8 @@ Singleton {
     readonly property real gridRowUnit: tileHeight
     readonly property real expandedTileMinWidth: columnWidth * 3 + gridGap * 2
     readonly property real sliderRowHeight: compact ? tileHeight : Theme.minimumTouchTargetSize
-    readonly property real stripTrackHeight: compact ? 12 : 32
-    readonly property real stripHandleHeight: stripTrackHeight + (compact ? Theme.spacingXS : Theme.sliderHandleGap) * 2
+    readonly property real stripTrackHeight: Theme.flatComponents ? Theme.sliderTrackHeightS : compact ? 12 : 32
+    readonly property real stripHandleHeight: Theme.flatComponents ? Theme.sliderHandleHeightS : stripTrackHeight + (compact ? Theme.spacingXS : Theme.sliderHandleGap) * 2
     readonly property real gridGap: compact ? Theme.spacingXS + Theme.spacingXXS : Theme.spacingS
     readonly property real iconScale: SettingsData.controlCenterIconScale
     readonly property real tileIconSize: (compact ? Theme.iconSizeMedium : Theme.iconSizeLarge) * iconScale

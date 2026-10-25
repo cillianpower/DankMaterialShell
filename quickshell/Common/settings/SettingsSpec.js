@@ -1042,6 +1042,9 @@ var LOCAL_SPEC = {
     alertHueSource: {
         def: "wallpaper"
     },
+    sliderStyle: {
+        def: "thumb"
+    },
     notificationSummaryFontSize: {
         def: 0
     },

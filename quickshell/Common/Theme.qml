@@ -1337,19 +1337,22 @@ Singleton {
     readonly property real listItemHeight: compactDensity ? 32 : 56
     readonly property real listItemTwoLineHeight: compactDensity ? 40 : 72
     readonly property real avatarSize: compactDensity ? 28 : 36
-    readonly property real sliderTrackHeight: compactDensity ? 10 : 16
-    readonly property real sliderHandleWidth: 4
-    readonly property real sliderHandleWidthPressed: 2
-    readonly property real sliderHandleHeight: compactDensity ? 18 : 28
-    readonly property real sliderHandleGap: compactDensity ? 3 : 6
-    readonly property real sliderTrackHeightS: compactDensity ? 12 : 24
-    readonly property real sliderHandleHeightS: compactDensity ? 20 : 36
-    readonly property real sliderTrackHeightM: compactDensity ? 16 : 40
-    readonly property real sliderHandleHeightM: compactDensity ? 24 : 52
-    readonly property real sliderTrackHeightL: 56
-    readonly property real sliderHandleHeightL: 68
-    readonly property real sliderTrackHeightXL: 96
-    readonly property real sliderHandleHeightXL: 108
+    // flat: every slider is thin, a 4 track with a 12 round thumb, or a 6 filled bar (sliderStyle bar)
+    readonly property real flatSliderTrack: typeof SettingsData !== "undefined" && SettingsData.sliderStyle === "bar" ? 6 : 4
+    readonly property real flatSliderThumb: 12
+    readonly property real sliderTrackHeight: flatComponents ? flatSliderTrack : compactDensity ? 10 : 16
+    readonly property real sliderHandleWidth: flatComponents ? flatSliderThumb : 4
+    readonly property real sliderHandleWidthPressed: flatComponents ? flatSliderThumb : 2
+    readonly property real sliderHandleHeight: flatComponents ? flatSliderThumb : compactDensity ? 18 : 28
+    readonly property real sliderHandleGap: flatComponents ? 0 : compactDensity ? 3 : 6
+    readonly property real sliderTrackHeightS: flatComponents ? flatSliderTrack : compactDensity ? 12 : 24
+    readonly property real sliderHandleHeightS: flatComponents ? flatSliderThumb : compactDensity ? 20 : 36
+    readonly property real sliderTrackHeightM: flatComponents ? flatSliderTrack : compactDensity ? 16 : 40
+    readonly property real sliderHandleHeightM: flatComponents ? flatSliderThumb : compactDensity ? 24 : 52
+    readonly property real sliderTrackHeightL: flatComponents ? flatSliderTrack : 56
+    readonly property real sliderHandleHeightL: flatComponents ? flatSliderThumb : 68
+    readonly property real sliderTrackHeightXL: flatComponents ? flatSliderTrack : 96
+    readonly property real sliderHandleHeightXL: flatComponents ? flatSliderThumb : 108
     // flat: a small switch whose track carries the state; the thumb keeps its size
     readonly property real switchTrackWidth: flatComponents ? 28 : 52
     readonly property real switchTrackHeight: flatComponents ? 16 : 32

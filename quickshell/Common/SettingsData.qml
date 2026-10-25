@@ -690,6 +690,8 @@ Singleton {
     property string componentStyle: Spec.SPEC.componentStyle.def
     // flat alerts: wallpaper (the palette key hue, muted) or harmonised (red and orange bent toward it). no ui: an a/b
     property string alertHueSource: Spec.SPEC.alertHueSource.def
+    // flat sliders: thumb (a thin track and a small round thumb) or bar (a filled bar, its thumb only on focus or drag). an a/b
+    property string sliderStyle: Spec.SPEC.sliderStyle.def
     property int textRenderType: SettingsData.TextRenderType.Qt
     property int textRenderQuality: SettingsData.TextRenderQuality.Default
 
