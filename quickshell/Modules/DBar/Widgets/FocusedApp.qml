@@ -278,23 +278,15 @@ BasePill {
                         id: titleText
                         text: {
                             const title = activeWindow && activeWindow.title ? activeWindow.title : "";
-                            const appName = appText.text;
+                            // the app's own name, also in compact mode where appText shows none
+                            const appName = activeWindow && activeWindow.appId ? Paths.getAppName(activeWindow.appId, activeDesktopEntry) : "";
 
-                            if (compactMode) {
-                                if (!title || title === appName)
-                                    return title || appName;
-                                if (title.endsWith(appName))
-                                    return title.substring(0, title.length - appName.length).replace(/ (-|—) $/, "") || appName;
+                            if (compactMode && (!title || title === appName))
+                                return title || appName;
+                            if (!title || !appName || !title.endsWith(appName))
                                 return title;
-                            }
-
-                            if (!title || !appName)
-                                return title;
-
-                            if (title.endsWith(appName))
-                                return title.substring(0, title.length - appName.length).replace(/ (-|—) $/, "");
-
-                            return title;
+                            const stripped = title.substring(0, title.length - appName.length).replace(/ (-|—|–) $/, "");
+                            return compactMode ? stripped || appName : stripped;
                         }
                         font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
                         color: root.contentColor
