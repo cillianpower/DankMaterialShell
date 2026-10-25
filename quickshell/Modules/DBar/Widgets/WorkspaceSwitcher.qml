@@ -40,6 +40,12 @@ BasePill {
     readonly property real hoverFadeAlpha: 0.7
     readonly property real cardWindowRatio: 0.45
 
+    function appLevel(active, hovered) {
+        if (active || hovered && Theme.flatComponents)
+            return 1;
+        return hovered ? 0.8 : Theme.levelSecondaryAlpha;
+    }
+
     WorkspaceSwitcherModel {
         id: workspaces
 
@@ -533,7 +539,7 @@ BasePill {
                 readonly property color occupiedColor: {
                     const mode = effectiveColorMode(root.opt("workspaceOccupiedColorMode"), root.opt("workspaceUnfocusedMonitorOccupiedColorMode"));
                     if (mode === "none")
-                        return unfocusedColor;
+                        return Theme.flatComponents ? Theme.textSecondary : unfocusedColor;
                     return colorFromMode(mode, unfocusedColor, effectiveCustomColor(root.opt("workspaceOccupiedCustomColor"), root.opt("workspaceUnfocusedMonitorOccupiedCustomColor")), Theme.secondary);
                 }
 
@@ -986,13 +992,13 @@ BasePill {
                                         readonly property bool appHighlightActive: root.opt("workspaceActiveAppHighlightEnabled") && modelData.active
                                         readonly property color appBorderColor: appHighlightActive ? focusedBorderColor : Theme.primarySelected
                                         readonly property color appGlyphColor: appHighlightActive ? focusedBorderColor : Theme.primary
-                                        readonly property real appOpacity: modelData.active ? 1.0 : rowAppHover.hovered ? 0.8 : 0.6
+                                        readonly property real appOpacity: root.appLevel(modelData.active, rowAppHover.hovered)
 
                                         IconImage {
                                             id: rowAppIcon
                                             anchors.fill: parent
                                             source: modelData.icon || ""
-                                            opacity: modelData.active ? 1.0 : rowAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, rowAppHover.hovered)
                                             visible: !modelData.isQuickshell && !modelData.isSteamApp && status === Image.Ready
                                         }
 
@@ -1034,7 +1040,7 @@ BasePill {
                                         IconImage {
                                             anchors.fill: parent
                                             source: modelData.icon
-                                            opacity: modelData.active ? 1.0 : rowAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, rowAppHover.hovered)
                                             visible: modelData.isQuickshell
                                             layer.enabled: true
                                             layer.effect: MultiEffect {
@@ -1048,7 +1054,7 @@ BasePill {
                                             id: rowSteamIcon
                                             anchors.fill: parent
                                             source: modelData.icon
-                                            opacity: modelData.active ? 1.0 : rowAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, rowAppHover.hovered)
                                             visible: modelData.isSteamApp && modelData.icon
                                         }
 
@@ -1057,7 +1063,7 @@ BasePill {
                                             size: root.appIconSize
                                             name: "sports_esports"
                                             color: appHighlightActive ? focusedBorderColor : Theme.widgetTextColor
-                                            opacity: modelData.active ? 1.0 : rowAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, rowAppHover.hovered)
                                             visible: modelData.isSteamApp && !modelData.icon
                                         }
 
@@ -1144,13 +1150,13 @@ BasePill {
                                         readonly property bool appHighlightActive: root.opt("workspaceActiveAppHighlightEnabled") && modelData.active
                                         readonly property color appBorderColor: appHighlightActive ? focusedBorderColor : Theme.primarySelected
                                         readonly property color appGlyphColor: appHighlightActive ? focusedBorderColor : Theme.primary
-                                        readonly property real appOpacity: modelData.active ? 1.0 : colAppHover.hovered ? 0.8 : 0.6
+                                        readonly property real appOpacity: root.appLevel(modelData.active, colAppHover.hovered)
 
                                         IconImage {
                                             id: colAppIcon
                                             anchors.fill: parent
                                             source: modelData.icon || ""
-                                            opacity: modelData.active ? 1.0 : colAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, colAppHover.hovered)
                                             visible: !modelData.isQuickshell && !modelData.isSteamApp && status === Image.Ready
                                         }
 
@@ -1192,7 +1198,7 @@ BasePill {
                                         IconImage {
                                             anchors.fill: parent
                                             source: modelData.icon
-                                            opacity: modelData.active ? 1.0 : colAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, colAppHover.hovered)
                                             visible: modelData.isQuickshell
                                             layer.enabled: true
                                             layer.effect: MultiEffect {
@@ -1206,7 +1212,7 @@ BasePill {
                                             id: colSteamIcon
                                             anchors.fill: parent
                                             source: modelData.icon
-                                            opacity: modelData.active ? 1.0 : colAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, colAppHover.hovered)
                                             visible: modelData.isSteamApp && modelData.icon
                                         }
 
@@ -1215,7 +1221,7 @@ BasePill {
                                             size: root.appIconSize
                                             name: "sports_esports"
                                             color: appHighlightActive ? focusedBorderColor : Theme.widgetTextColor
-                                            opacity: modelData.active ? 1.0 : colAppHover.hovered ? 0.8 : 0.6
+                                            opacity: root.appLevel(modelData.active, colAppHover.hovered)
                                             visible: modelData.isSteamApp && !modelData.icon
                                         }
 

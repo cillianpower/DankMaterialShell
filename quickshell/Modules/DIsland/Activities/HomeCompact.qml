@@ -325,7 +325,16 @@ Item {
         return BluetoothService.connected ? "bluetooth_connected" : "bluetooth";
     }
 
+    function connectivityOn(type) {
+        if (type === "wifi")
+            return NetworkService.wifiAvailable && NetworkService.networkAvailable && (NetworkService.wifiEnabled || NetworkService.wifiToggling);
+        return BluetoothService.available && BluetoothService.enabled;
+    }
+
     function connectivityIconColor(type) {
+        // flat: the glyph's shape carries the state, its level only on or off
+        if (Theme.flatComponents)
+            return root.connectivityOn(type) ? Theme.textPrimary : Theme.textTertiary;
         if (type === "wifi") {
             if (!NetworkService.wifiAvailable || !NetworkService.networkAvailable)
                 return Theme.surfaceTextMedium;
@@ -342,9 +351,7 @@ Item {
     }
 
     function connectivityIconOpacity(type) {
-        if (type === "wifi")
-            return NetworkService.wifiAvailable && NetworkService.networkAvailable && (NetworkService.wifiEnabled || NetworkService.wifiToggling) ? 1 : 0.5;
-        return BluetoothService.available && BluetoothService.enabled ? 1 : 0.5;
+        return Theme.flatComponents || root.connectivityOn(type) ? 1 : 0.5;
     }
 
     function connectivityBusy(type) {
@@ -394,7 +401,7 @@ Item {
         fontSize: root.textSize
         availableWidth: root.width
         dateColor: Theme.surfaceTextMedium
-        separatorColor: Theme.primary
+        separatorColor: Theme.flatComponents ? Theme.textTertiary : Theme.primary
         // clockTimeOverlay: in the frame, the ticking time draws on a surface of its own (the island host's) while the
         // face holds still: at rest, and pinned while a page opens, shows and closes. while it moves or gives way to
         // something else, the frame redraws anyway
@@ -606,7 +613,7 @@ Item {
                 visible: group.isNotifications
                 name: "notifications"
                 size: root.statusIconSize
-                color: Theme.secondary
+                color: Theme.flatComponents ? Theme.textSecondary : Theme.secondary
             }
 
             StyledText {
