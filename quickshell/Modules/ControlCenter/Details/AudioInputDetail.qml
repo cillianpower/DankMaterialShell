@@ -7,7 +7,6 @@ import qs.Modules.ControlCenter
 import qs.Modules.ControlCenter.Widgets
 import qs.Services
 import qs.DCommon.Widgets
-import "../../../Common/CcPages.js" as CcPages
 import "../../../Common/QmlUtils.js" as QmlUtils
 
 Item {
@@ -107,32 +106,13 @@ Item {
                 }
             }
 
-            // the devices' own controls, from plugins ("controlCenterPage" in a plugin.json): a layer down
-            CcSectionLabel {
-                text: I18n.tr("Device Settings")
-                visible: devicePages.count > 0
-            }
-
-            CcGroup {
-                visible: devicePages.count > 0
-
-                Repeater {
-                    id: devicePages
-                    model: CcPages.pagesForDevices(Object.values(PluginService.loadedPlugins), "audioInput", AudioService.allNodes.filter(node => node.audio && !node.isSink && !node.isStream).map(node => ({
-                                "text": [node.name, node.description, AudioService.displayName(node)].join(" "),
-                                "title": AudioService.displayName(node)
-                            })))
-
-                    CcListRow {
-                        required property var modelData
-
-                        iconName: modelData.icon
-                        title: modelData.title
-                        clickable: true
-                        showChevron: true
-                        onClicked: root.navigateRequested(modelData.section)
-                    }
-                }
+            CcDevicePages {
+                parentPage: "audioInput"
+                devices: AudioService.allNodes.filter(node => node.audio && !node.isSink && !node.isStream).map(node => ({
+                        "text": [node.name, node.description, AudioService.displayName(node)].join(" "),
+                        "title": AudioService.displayName(node)
+                    }))
+                onNavigateRequested: section => root.navigateRequested(section)
             }
         }
     }
