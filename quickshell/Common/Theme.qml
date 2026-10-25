@@ -346,14 +346,23 @@ Singleton {
         return modes[0];
     }
 
-    property color primary: currentThemeData.primary
-    property color primaryText: currentThemeData.primaryText
-    property color secondary: currentThemeData.secondary
-    property color tertiary: currentThemeData.tertiary || currentThemeData.secondary
+    // flat: one text colour at three levels. the accent roles are that colour, opaque because containers blend them,
+    // and the palette's own hue is left for alerts
+    readonly property real levelSecondaryAlpha: 0.6
+    readonly property real levelTertiaryAlpha: 0.3
+    readonly property color textPrimary: surfaceText
+    readonly property color textSecondary: withAlpha(surfaceText, levelSecondaryAlpha)
+    readonly property color textTertiary: withAlpha(surfaceText, levelTertiaryAlpha)
+    readonly property color paletteKey: currentThemeData.primary
+
+    property color primary: flatComponents ? currentThemeData.surfaceText : currentThemeData.primary
+    property color primaryText: flatComponents ? Contrast.readableOn(primary, [surface, contrastDark, contrastLight]) : currentThemeData.primaryText
+    property color secondary: flatComponents ? currentThemeData.surfaceText : currentThemeData.secondary
+    property color tertiary: flatComponents ? currentThemeData.surfaceText : (currentThemeData.tertiary || currentThemeData.secondary)
     property color surface: currentThemeData.surface
     property color surfaceText: currentThemeData.surfaceText
     property color surfaceVariant: currentThemeData.surfaceVariant
-    property color surfaceVariantText: currentThemeData.surfaceVariantText
+    property color surfaceVariantText: flatComponents ? textSecondary : currentThemeData.surfaceVariantText
     property color surfaceTint: currentThemeData.surfaceTint
     property color background: currentThemeData.background
     property color backgroundText: currentThemeData.backgroundText
@@ -372,15 +381,15 @@ Singleton {
     readonly property color chipSurfaceNested: typeof SettingsData === "undefined" ? surfaceContainerHighest : surfaceRoleColor(SettingsData.chipSurfaceNestedColor, SettingsData.chipSurfaceNestedCustomColor, surfaceContainerHighest)
     readonly property real containerSaturation: typeof SettingsData === "undefined" ? 1 : SettingsData.containerSaturation / 100
     readonly property real containerTint: (currentThemeData.containerTint ?? Tonal.defaultTint(surfaceContainer)) * containerSaturation
-    property color primaryContainer: currentThemeData.softPrimaryContainer || Tonal.softContainer(primary, surfaceContainer, containerTint)
-    property color secondaryContainer: currentThemeData.secondaryContainer || blend(surfaceContainerHigh, secondary, 0.35)
-    property color tertiaryContainer: currentThemeData.tertiaryContainer || blend(surfaceContainerHigh, tertiary, 0.35)
+    property color primaryContainer: (!flatComponents && currentThemeData.softPrimaryContainer) || Tonal.softContainer(primary, surfaceContainer, containerTint)
+    property color secondaryContainer: (!flatComponents && currentThemeData.secondaryContainer) || blend(surfaceContainerHigh, secondary, 0.35)
+    property color tertiaryContainer: (!flatComponents && currentThemeData.tertiaryContainer) || blend(surfaceContainerHigh, tertiary, 0.35)
     readonly property real selectedContainerTint: currentThemeData.selectedContainerTint ?? 0.2
-    readonly property bool themedSelectedContainer: !!currentThemeData.secondaryContainer && Contrast.isTonal(secondaryContainer, onSecondaryContainer) && Contrast.isTonal(secondaryContainer, surfaceText)
-    readonly property color selectedContainer: currentThemeData.selectedContainer || (themedSelectedContainer ? secondaryContainer : Contrast.subtleTint(surfaceContainerHigh, primary, surfaceText, selectedContainerTint))
-    readonly property color accentOnSelectedContainer: currentThemeData.accentOnSelectedContainer || (Contrast.ratio(primary, selectedContainer) >= 3 ? primary : onSelectedContainer)
-    readonly property color accentOnPrimaryContainer: currentThemeData.accentOnPrimaryContainer || (Contrast.ratio(primary, primaryContainer) >= 3 ? primary : onPrimaryContainer)
-    readonly property var accents: Accents.derive(primary, isLightMode, currentThemeData.accents ?? null)
+    readonly property bool themedSelectedContainer: !flatComponents && !!currentThemeData.secondaryContainer && Contrast.isTonal(secondaryContainer, onSecondaryContainer) && Contrast.isTonal(secondaryContainer, surfaceText)
+    readonly property color selectedContainer: (!flatComponents && currentThemeData.selectedContainer) || (themedSelectedContainer ? secondaryContainer : Contrast.subtleTint(surfaceContainerHigh, primary, surfaceText, selectedContainerTint))
+    readonly property color accentOnSelectedContainer: (!flatComponents && currentThemeData.accentOnSelectedContainer) || (Contrast.ratio(primary, selectedContainer) >= 3 ? primary : onSelectedContainer)
+    readonly property color accentOnPrimaryContainer: (!flatComponents && currentThemeData.accentOnPrimaryContainer) || (Contrast.ratio(primary, primaryContainer) >= 3 ? primary : onPrimaryContainer)
+    readonly property var accents: Accents.derive(paletteKey, isLightMode, currentThemeData.accents ?? null)
     property color inversePrimary: currentThemeData.inversePrimary || wallpaperThemeData(!isLightMode).primary
     property color inverseSurface: currentThemeData.inverseSurface || surfaceText
     property color inverseOnSurface: currentThemeData.inverseOnSurface || surface
@@ -396,7 +405,7 @@ Singleton {
     property color onTertiaryContainer
     property color onSelectedContainer
     property color onSurface_12: withAlpha(onSurface, 0.12)
-    property color onSurface_38: withAlpha(onSurface, 0.38)
+    property color onSurface_38: flatComponents ? textTertiary : withAlpha(onSurface, 0.38)
     property color onSurfaceVariant_30: withAlpha(onSurfaceVariant, 0.30)
     property color onSurfaceVariant_40
     readonly property list<QtObject> roleBindings: [
@@ -435,7 +444,7 @@ Singleton {
             property: "onPrimaryContainer"
             value: {
                 const explicit = root.currentThemeData.onPrimaryContainer || root.currentThemeData.primaryContainerText;
-                if (!explicit)
+                if (!explicit || root.flatComponents)
                     return Contrast.readableOn(root.primaryContainer, root.onContainerCandidates);
                 if (root.currentThemeData.softPrimaryContainer)
                     return explicit;
@@ -445,17 +454,17 @@ Singleton {
         Binding {
             target: root
             property: "onSecondaryContainer"
-            value: root.currentThemeData.onSecondaryContainer || Contrast.readableOn(root.secondaryContainer, root.onContainerCandidates)
+            value: (!root.flatComponents && root.currentThemeData.onSecondaryContainer) || Contrast.readableOn(root.secondaryContainer, root.onContainerCandidates)
         },
         Binding {
             target: root
             property: "onTertiaryContainer"
-            value: root.currentThemeData.onTertiaryContainer || Contrast.readableOn(root.tertiaryContainer, root.onContainerCandidates)
+            value: (!root.flatComponents && root.currentThemeData.onTertiaryContainer) || Contrast.readableOn(root.tertiaryContainer, root.onContainerCandidates)
         },
         Binding {
             target: root
             property: "onSelectedContainer"
-            value: root.currentThemeData.onSelectedContainer || (root.currentThemeData.selectedContainer ? Contrast.readableOn(root.selectedContainer, root.onContainerCandidates) : root.themedSelectedContainer ? root.onSecondaryContainer : root.surfaceText)
+            value: (!root.flatComponents && root.currentThemeData.onSelectedContainer) || (!root.flatComponents && root.currentThemeData.selectedContainer ? Contrast.readableOn(root.selectedContainer, root.onContainerCandidates) : root.themedSelectedContainer ? root.onSecondaryContainer : root.surfaceText)
         }
     ]
     readonly property var onContainerCandidates: [surfaceText, surface, contrastLight, contrastDark]
@@ -553,7 +562,7 @@ Singleton {
     readonly property color floatingWindowFieldBorderColor: popupFieldBorderColor
     readonly property color floatingWindowFieldFocusedBorderColor: popupFieldFocusedBorderColor
     property color surfaceTextHover: withAlpha(surfaceText, 0.08)
-    property color surfaceTextAlpha: withAlpha(surfaceText, 0.3)
+    property color surfaceTextAlpha: withAlpha(surfaceText, levelTertiaryAlpha)
 
     function surfaceRoleColor(mode, customColor, fallback) {
         switch (mode ?? "default") {
@@ -656,8 +665,8 @@ Singleton {
         }
     }
     property color surfaceTextLight: withAlpha(surfaceText, 0.06)
-    property color surfaceTextSecondary: withAlpha(surfaceText, 0.6)
-    property color surfaceTextMedium: withAlpha(surfaceText, 0.7)
+    property color surfaceTextSecondary: textSecondary
+    property color surfaceTextMedium: flatComponents ? textSecondary : withAlpha(surfaceText, 0.7)
 
     property color outlineButton: withAlpha(outline, 0.5)
     property color outlineLight: withAlpha(outline, Math.min(1, layerOutlineOpacity * 0.625))
@@ -1688,7 +1697,7 @@ Singleton {
         }
     }
 
-    property color widgetInactiveIconColor: withAlpha(widgetIconColor, 0.6)
+    property color widgetInactiveIconColor: withAlpha(widgetIconColor, levelSecondaryAlpha)
 
     property color widgetTextColor: {
         if (typeof SettingsData === "undefined") {
