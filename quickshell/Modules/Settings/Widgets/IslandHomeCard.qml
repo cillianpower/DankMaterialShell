@@ -122,11 +122,16 @@ SettingsCard {
                 {
                     key: "connectivity",
                     label: I18n.tr("Wi-Fi & Bluetooth", "island settings: status group connectivity content")
+                },
+                {
+                    key: "notable",
+                    label: I18n.tr("Smart", "island settings: status group shows wi-fi and bluetooth only when there is something to know")
                 }
             ]
-            selectedKey: SettingsData.islandHomeStatusContent(root.store.config) === "connectivity" ? "connectivity" : root.store.setting("islandBatteryStyle")
+            readonly property string content: SettingsData.islandHomeStatusContent(root.store.config)
+            selectedKey: content === "battery" ? root.store.setting("islandBatteryStyle") : content
             onSelected: key => {
-                if (key === "connectivity") {
+                if (key === "connectivity" || key === "notable") {
                     root.store.apply("islandHomeStatusContent", key);
                     return;
                 }

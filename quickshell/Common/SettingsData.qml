@@ -1027,7 +1027,7 @@ Singleton {
 
     function islandHomeStatusContent(bc) {
         const value = islandSetting(bc, "islandHomeStatusContent");
-        return value === "battery" || value === "connectivity" ? value : "battery";
+        return value === "battery" || value === "connectivity" || value === "notable" ? value : "battery";
     }
 
     function islandEdge(bc) {

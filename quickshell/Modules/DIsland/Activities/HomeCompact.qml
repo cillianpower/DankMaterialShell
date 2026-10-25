@@ -309,7 +309,17 @@ Item {
         BrightnessService.setBrightness(next, root.brightnessDevice.id, true);
     }
 
+    // notable: wifi while connecting, with no network at all, as a weak uplink or under a vpn; bluetooth while a
+    // device is connected or connecting
+    function connectivityNotable(type) {
+        if (type === "wifi")
+            return NetworkService.wifiToggling || NetworkService.isWifiConnecting || !NetworkService.networkAvailable || NetworkService.networkStatus === "disconnected" || NetworkService.vpnConnected || NetworkService.networkStatus === "wifi" && NetworkService.wifiSignalIcon !== "wifi";
+        return BluetoothService.connected || BluetoothService.connecting;
+    }
+
     function connectivityIconName(type) {
+        if (type === "wifi" && root.controller.homeStatusContent === "notable")
+            return NetworkService.statusIconName;
         if (type === "wifi") {
             if (!NetworkService.wifiAvailable || !NetworkService.networkAvailable)
                 return "wifi_off";
@@ -416,6 +426,7 @@ Item {
 
         width: root.iconSize
         height: root.iconSize
+        visible: root.controller.homeStatusContent !== "notable" || root.connectivityNotable(connectivityIcon.type)
         opacity: root.connectivityIconOpacity(connectivityIcon.type)
 
         DIcon {
@@ -520,8 +531,8 @@ Item {
         readonly property bool isTray: group.groupId === "tray"
         readonly property bool isSystemLevel: group.isVolume || group.isBrightness
         readonly property var pager: pagerLoader.item
-        readonly property bool usesConnectivity: group.isStatus && root.controller.homeStatusContent === "connectivity"
-        readonly property bool usesBattery: group.isStatus && !group.usesConnectivity && BatteryService.batteryAvailable
+        readonly property bool usesConnectivity: group.isStatus && (root.controller.homeStatusContent === "connectivity" || root.controller.homeStatusContent === "notable" && (root.connectivityNotable("wifi") || root.connectivityNotable("bluetooth")))
+        readonly property bool usesBattery: group.isStatus && root.controller.homeStatusContent === "battery" && BatteryService.batteryAvailable
         readonly property bool iconOnly: group.isMedia || (group.isStatus && !group.usesBattery && !group.usesConnectivity)
         readonly property string levelDisplay: group.isVolume ? root.controller.homeVolumeDisplay : root.controller.homeBrightnessDisplay
         readonly property int levelPercent: group.isVolume ? root.volumePercent : root.brightnessPercent

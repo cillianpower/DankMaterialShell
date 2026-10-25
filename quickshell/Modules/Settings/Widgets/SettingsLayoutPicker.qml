@@ -263,10 +263,18 @@ GridLayout {
                     }
 
                     BatteryMeter {
-                        visible: root.statusStyle && modeCard.modelData.key !== "connectivity"
+                        visible: root.statusStyle && modeCard.modelData.key !== "connectivity" && modeCard.modelData.key !== "notable"
                         anchors.centerIn: parent
                         thickness: Theme.iconSizeLarge
                         meterStyle: modeCard.modelData.key
+                    }
+
+                    DIcon {
+                        visible: root.statusStyle && modeCard.modelData.key === "notable"
+                        anchors.centerIn: parent
+                        name: "tune"
+                        size: Theme.iconSize
+                        color: Theme.primary
                     }
 
                     Row {

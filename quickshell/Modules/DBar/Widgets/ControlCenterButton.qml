@@ -117,21 +117,6 @@ BasePill {
         }
     }
 
-    function getNetworkIconName() {
-        if (NetworkService.wifiToggling)
-            return "sync";
-        switch (NetworkService.networkStatus) {
-        case "ethernet":
-            return "lan";
-        case "cellular":
-            return "network_cell";
-        case "vpn":
-            return NetworkService.ethernetConnected ? "lan" : (NetworkService.cellularConnected ? "network_cell" : NetworkService.wifiSignalIcon);
-        default:
-            return NetworkService.wifiSignalIcon;
-        }
-    }
-
     function getNetworkIconColor() {
         if (NetworkService.wifiToggling)
             return Theme.primary;
@@ -499,7 +484,7 @@ BasePill {
                                 case "screenSharing":
                                     return "screen_record";
                                 case "network":
-                                    return root.getNetworkIconName();
+                                    return NetworkService.statusIconName;
                                 case "vpn":
                                     return "vpn_lock";
                                 case "bluetooth":
@@ -684,7 +669,7 @@ BasePill {
                                 case "screenSharing":
                                     return "screen_record";
                                 case "network":
-                                    return root.getNetworkIconName();
+                                    return NetworkService.statusIconName;
                                 case "vpn":
                                     return "vpn_lock";
                                 case "bluetooth":

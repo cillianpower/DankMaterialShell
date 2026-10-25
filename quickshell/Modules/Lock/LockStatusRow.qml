@@ -302,20 +302,7 @@ Row {
 
         DIcon {
             id: networkIcon
-            name: {
-                if (NetworkService.wifiToggling)
-                    return "sync";
-                switch (NetworkService.networkStatus) {
-                case "ethernet":
-                    return "lan";
-                case "cellular":
-                    return "network_cell";
-                case "vpn":
-                    return NetworkService.ethernetConnected ? "lan" : (NetworkService.cellularConnected ? "network_cell" : NetworkService.wifiSignalIcon);
-                default:
-                    return NetworkService.wifiSignalIcon;
-                }
-            }
+            name: NetworkService.statusIconName
             size: Theme.iconSizeSmall
             color: (NetworkService.networkStatus !== "disconnected" || NetworkService.isConnecting) ? root.contentColor : root.dimColor
             anchors.verticalCenter: parent.verticalCenter

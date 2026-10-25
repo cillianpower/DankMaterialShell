@@ -52,6 +52,21 @@ Singleton {
     property var savedConnections: activeService?.savedConnections ?? []
     property var ssidToConnectionName: activeService?.ssidToConnectionName ?? ({})
     property var wifiSignalIcon: activeService?.wifiSignalIcon ?? "wifi_off"
+    // the uplink's glyph; under a vpn, the link it rides on
+    readonly property string statusIconName: {
+        if (wifiToggling)
+            return "sync";
+        switch (networkStatus) {
+        case "ethernet":
+            return "lan";
+        case "cellular":
+            return "network_cell";
+        case "vpn":
+            return ethernetConnected ? "lan" : (cellularConnected ? "network_cell" : wifiSignalIcon);
+        default:
+            return wifiSignalIcon;
+        }
+    }
 
     property string userPreference: activeService?.userPreference ?? "auto"
     property bool isConnecting: activeService?.isConnecting ?? false
