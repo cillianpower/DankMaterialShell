@@ -20,7 +20,7 @@ FocusScope {
     property string screenModel: ""
     property var transientSurfaceTracker: null
     property real topInset: 0
-    property vector4d cornerRadii: Qt.vector4d(Theme.windowRadius, Theme.windowRadius, Theme.windowRadius, Theme.windowRadius)
+    property vector4d cornerRadii: Qt.vector4d(Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius)
     property real coverage: 0
     property var runningToplevels: []
     // the panel is opening straight onto this page: in place, no fade in

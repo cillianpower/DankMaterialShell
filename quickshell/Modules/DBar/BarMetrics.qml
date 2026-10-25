@@ -18,7 +18,7 @@ Singleton {
     readonly property real badgeInset: Theme.spacingXS
     readonly property real mediaControlSize: Theme.iconSizeMedium
     readonly property real menuRowHeight: Theme.menuItemHeight
-    readonly property real menuItemRadius: Theme.cornerRadiusS
+    readonly property real menuItemRadius: Theme.menuItemRadius
     readonly property real popoutRowHeight: Theme.listItemHeight
     readonly property real popoutRowTwoLineHeight: Theme.listItemTwoLineHeight
     readonly property var elevationLevel: Theme.elevationLevel2

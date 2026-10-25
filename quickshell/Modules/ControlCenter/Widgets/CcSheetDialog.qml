@@ -15,7 +15,7 @@ Item {
     property color statusColor: Theme.surfaceVariantText
     property bool shown: false
     property real panelWidth: CcMetrics.dialogWidth
-    property vector4d cornerRadii: Qt.vector4d(Theme.windowRadius, Theme.windowRadius, Theme.windowRadius, Theme.windowRadius)
+    property vector4d cornerRadii: Qt.vector4d(Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius)
     property Item backdrop: null
     readonly property real presence: panel.opacity
     default property alias content: contentSlot.data
@@ -84,7 +84,7 @@ Item {
         anchors.centerIn: parent
         width: Math.min(root.panelWidth, root.width - Theme.spacingL * 2)
         height: column.implicitHeight + Theme.spacingL * 2
-        radius: Theme.windowRadius
+        radius: Theme.surfaceRadius
         color: CcMetrics.dialogColor
         border.width: Theme.layerOutlineWidth
         border.color: Theme.outlineMedium

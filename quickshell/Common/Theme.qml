@@ -1056,7 +1056,13 @@ Singleton {
     // an untinted frame: the blur is a connected surface's body, so each surface sets its own (it moves with it)
     readonly property bool connectedBodiesBlurThemselves: frameSurfaceColor.a < 0.01
     readonly property color frameSurfaceColor: typeof SettingsData === "undefined" ? withAlpha(hostSurface, popupTransparency) : withAlpha(SettingsData.frameSurfaceBase, SettingsData.frameSurfaceOpacity)
-    readonly property real connectedSurfaceRadius: isConnectedEffect ? connectedCornerRadius : windowRadius
+    // flat: corners are concentric. rows and tiles keep the window radius, a menu around them (half its padding) is 1.5
+    // times it and a surface (padding the radius) twice it; concave joins stay the window radius
+    readonly property real surfaceRadius: flatComponents ? windowRadiusXL : windowRadius
+    readonly property real menuRadius: flatComponents ? windowRadiusL : windowRadius
+    readonly property real menuPadding: flatComponents ? windowRadius / 2 : spacingS
+    readonly property real menuItemRadius: flatComponents ? windowRadius : cornerRadiusS
+    readonly property real connectedSurfaceRadius: flatComponents ? windowRadiusXL : isConnectedEffect ? connectedCornerRadius : windowRadius
     readonly property bool connectedSurfaceBlurEnabled: (typeof SettingsData === "undefined") ? true : (!isConnectedEffect || SettingsData.frameBlurEnabled)
     readonly property real effectScaleCollapsed: AnimVariants.effectScaleCollapsed
     readonly property real effectAnimOffset: AnimVariants.effectAnimOffset

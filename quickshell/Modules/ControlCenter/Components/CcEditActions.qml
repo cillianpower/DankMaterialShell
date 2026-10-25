@@ -21,7 +21,7 @@ Item {
     readonly property bool trashShown: editMode && dragging && dragRemovable
     property bool overTrash: false
     property color backgroundColor: CcMetrics.dialogColor
-    property vector4d cornerRadii: Qt.vector4d(Theme.windowRadius, Theme.windowRadius, Theme.windowRadius, Theme.windowRadius)
+    property vector4d cornerRadii: Qt.vector4d(Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius)
     // Shoulders fill outside the panel's corner arcs so a translucent fill never doubles up.
     property bool joined: false
     property bool above: false

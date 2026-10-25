@@ -10,7 +10,8 @@ Singleton {
     readonly property int defaultColumns: 8
     readonly property int minimumColumns: 6
     readonly property bool compact: Theme.compactDensity
-    readonly property real sheetPadding: compact ? Theme.spacingS + Theme.spacingXXS : PopoutMetrics.contentPadding
+    // flat: concentric with the sheet's corners around tiles at the window radius
+    readonly property real sheetPadding: Theme.flatComponents ? Theme.surfaceRadius - Theme.windowRadius : compact ? Theme.spacingS + Theme.spacingXXS : PopoutMetrics.contentPadding
     readonly property real columnWidth: tileHeight
     readonly property real gridStep: 0.5
     property int columnPreview: 0

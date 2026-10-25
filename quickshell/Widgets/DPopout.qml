@@ -124,7 +124,7 @@ Item {
     function alignedYFor(overTop, overBottom) {
         return impl.item?.alignedYFor(overTop, overBottom) ?? 0;
     }
-    readonly property vector4d surfaceCornerRadii: impl.item?.surfaceCornerRadii ?? Qt.vector4d(Theme.windowRadius, Theme.windowRadius, Theme.windowRadius, Theme.windowRadius)
+    readonly property vector4d surfaceCornerRadii: impl.item?.surfaceCornerRadii ?? Qt.vector4d(Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius)
     readonly property real maskX: impl.item ? impl.item.maskX : 0
     readonly property real maskY: impl.item ? impl.item.maskY : 0
     readonly property real maskWidth: impl.item ? impl.item.maskWidth : 0

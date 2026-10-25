@@ -94,7 +94,7 @@ Item {
             visible: entryStack.count === 0
             width: parent.width
             height: Theme.menuItemHeight
-            radius: Theme.cornerRadiusS
+            radius: Theme.menuItemRadius
             color: Theme.withAlpha(Theme.onSurface, visibilityToggleArea.pressed ? Theme.stateLayerPressed : visibilityToggleArea.containsMouse ? Theme.stateLayerHover : 0)
 
             StyledText {
@@ -164,7 +164,7 @@ Item {
             visible: entryStack.count > 0
             width: parent.width
             height: Theme.menuItemHeight
-            radius: Theme.cornerRadiusS
+            radius: Theme.menuItemRadius
             color: Theme.withAlpha(Theme.onSurface, backArea.pressed ? Theme.stateLayerPressed : backArea.containsMouse ? Theme.stateLayerHover : 0)
 
             Row {
@@ -214,7 +214,7 @@ Item {
 
                 width: menuColumn.width
                 height: menuEntry?.isSeparator ? Theme.dividerWidth : Theme.menuItemHeight
-                radius: menuEntry?.isSeparator ? 0 : Theme.cornerRadiusS
+                radius: menuEntry?.isSeparator ? 0 : Theme.menuItemRadius
                 color: {
                     if (menuEntry?.isSeparator)
                         return Theme.outlineHeavy;

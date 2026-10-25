@@ -19,7 +19,7 @@ Item {
     property Component customContent: null
     property real customContentWidth: 0
     property string layerNamespace: "dms:context-menu"
-    property real menuMargin: Theme.spacingS
+    property real menuMargin: Theme.menuPadding
     property real minMenuWidth: Theme.fieldDefaultWidth
     property real itemHeight: Theme.menuItemHeight
     property real itemFontSize: Theme.fontSizeSmall
@@ -53,7 +53,7 @@ Item {
     readonly property bool hasTrailingIcons: menuItems.some(menuItem => !!menuItem.trailingIcon)
     readonly property real naturalMenuWidth: customContent ? Math.max(minMenuWidth, customContentWidth) : Math.max(minMenuWidth, menuTextMetrics.width + Theme.iconSize + Theme.spacingS * 5 + (hasTrailingIcons ? Theme.iconSizeMedium + Theme.spacingS : 0))
     readonly property real effectiveMenuWidth: Math.max(0, Math.min(maxMenuWidth, naturalMenuWidth))
-    readonly property real naturalMenuHeight: (customContent ? customContentLoader.implicitHeight : menuItemsHeight()) + Theme.spacingS * 2
+    readonly property real naturalMenuHeight: (customContent ? customContentLoader.implicitHeight : menuItemsHeight()) + Theme.menuPadding * 2
     readonly property real effectiveMenuHeight: Math.min(maxMenuHeight, naturalMenuHeight)
     readonly property bool menuScrolls: naturalMenuHeight > effectiveMenuHeight + 0.5
     readonly property int visibleItemCount: menuItems.filter(menuItem => isSelectable(menuItem)).length
@@ -249,7 +249,7 @@ Item {
             blurY: root.blurActive ? menuContainer.y + openScaleTransform.origin.y * (1 - menuContainer.openScale) : 0
             blurWidth: root.blurActive ? menuContainer.width * menuContainer.openScale : 0
             blurHeight: root.blurActive ? menuContainer.height * menuContainer.openScale : 0
-            blurRadius: Theme.windowRadius * menuContainer.openScale
+            blurRadius: Theme.menuRadius * menuContainer.openScale
         }
 
         MouseArea {
@@ -311,7 +311,7 @@ Item {
                 width: root.effectiveMenuWidth
                 height: root.effectiveMenuHeight
                 color: Theme.readableSurface
-                radius: Theme.windowRadius
+                radius: Theme.menuRadius
                 border.color: BlurService.borderColor
                 border.width: BlurService.borderWidth
                 opacity: root.openState ? 1 : 0
@@ -368,7 +368,7 @@ Item {
                 DFlickable {
                     id: menuFlickable
                     anchors.fill: parent
-                    anchors.margins: Theme.spacingS
+                    anchors.margins: Theme.menuPadding
                     clip: true
                     contentWidth: width
                     contentHeight: menuColumn.implicitHeight
@@ -433,7 +433,7 @@ Item {
                                     }
                                     visible: !menuItemDelegate.isSeparator && !menuItemDelegate.isComponent
                                     anchors.fill: parent
-                                    radius: Theme.cornerRadiusS
+                                    radius: Theme.menuItemRadius
                                     color: {
                                         if (!itemEnabled)
                                             return "transparent";
@@ -482,7 +482,7 @@ Item {
                                     DRipple {
                                         id: menuItemRipple
                                         rippleColor: menuRow.contentColor
-                                        cornerRadius: Theme.cornerRadiusS
+                                        cornerRadius: Theme.menuItemRadius
                                     }
 
                                     MouseArea {

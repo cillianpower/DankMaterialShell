@@ -1823,7 +1823,7 @@ Item {
 
             readonly property alias contentWrapper: contentWrapper
             readonly property alias blur: popoutBlur
-            readonly property real surfaceRadius: root.usesConnectedSurfaceChrome ? Theme.connectedSurfaceRadius : Theme.windowRadius
+            readonly property real surfaceRadius: root.usesConnectedSurfaceChrome ? Theme.connectedSurfaceRadius : Theme.surfaceRadius
             readonly property color surfaceColor: root.usesConnectedSurfaceChrome ? Theme.connectedSurfaceColor : Theme.readableSurface
             readonly property color surfaceBorderColor: root.usesConnectedSurfaceChrome ? Theme.withAlpha(BlurService.borderColor, 0) : BlurService.borderColor
             readonly property real surfaceBorderWidth: root.usesConnectedSurfaceChrome ? 0 : BlurService.borderWidth

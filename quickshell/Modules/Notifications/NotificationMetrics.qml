@@ -19,7 +19,7 @@ Singleton {
     readonly property real railHeight: Theme.spacingXS
     readonly property real railStopSize: railHeight
     readonly property real contentSpacing: compact ? Theme.spacingXXS : Theme.notificationContentSpacing
-    readonly property real popupRadius: Theme.windowRadius
+    readonly property real popupRadius: Theme.surfaceRadius
     readonly property real menuRadius: Theme.cornerRadiusM
     readonly property real popupWidth: Theme.compactDensity ? 340 : 400
     readonly property real popupMinWidth: 320

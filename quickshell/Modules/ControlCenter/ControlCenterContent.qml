@@ -72,7 +72,7 @@ FocusScope {
     readonly property bool canUndo: host.editMode && undoStack.length > 0 && editIdle && !widgetSheetOpen && !pageOpen
     readonly property bool panelResizing: panelResizer.resizing
     readonly property real sheetContentWidth: host.sheetContentWidth ?? CcMetrics.sheetWidthFor(gridColumns)
-    readonly property vector4d surfaceCornerRadii: host.surfaceCornerRadii ?? Qt.vector4d(Theme.windowRadius, Theme.windowRadius, Theme.windowRadius, Theme.windowRadius)
+    readonly property vector4d surfaceCornerRadii: host.surfaceCornerRadii ?? Qt.vector4d(Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius, Theme.surfaceRadius)
     readonly property int gridColumnCap: host.gridColumnCap ?? CcMetrics.columnCapFor((host.triggerScreen?.width ?? CcMetrics.sheetWidthDefault + Theme.spacingL * 2) - Theme.spacingL * 2)
     readonly property int gridColumns: host.gridColumns ?? Math.min(CcMetrics.gridColumns, gridColumnCap)
     readonly property real availableGridHeight: (host.availableHeight ?? (host.triggerScreen?.height ?? CcMetrics.fallbackScreenHeight) - CcMetrics.maxHeightInset) - CcMetrics.sheetPadding * 2 - editRoom
@@ -386,7 +386,7 @@ FocusScope {
         cornerResize: root.panelResizing ? resizeSide > 0 : root.panelResizer.sideMovable(1, root.gridColumns)
         horizontalResize: true
         removable: false
-        cornerRadius: Theme.windowRadius
+        cornerRadius: Theme.surfaceRadius
         cornerRadii: root.surfaceCornerRadii
         buttonSize: Theme.iconSize
         iconSize: PopoutMetrics.chromeIconSize

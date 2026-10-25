@@ -441,7 +441,7 @@ Item {
         alongOffset: root.freeMode || root.embedded ? 0 : Math.max(-root.maximumAlongOffset, Math.min(root.maximumAlongOffset, root.setting("islandAlongOffset")))
         outerGap: root.outerGap
         compactThickness: root.compactThickness
-        cornerRadius: root.connectedChrome ? Theme.connectedSurfaceRadius : Theme.windowRadius
+        cornerRadius: root.connectedChrome ? Theme.connectedSurfaceRadius : Theme.surfaceRadius
         pillRadius: BarMetrics.pillRadius(root.compactThickness, root.barConfig?.widgetStyle ?? "pills")
         homeCompactTight: root.setting("islandHomeCompactTight")
         homeStatusContent: SettingsData.islandHomeStatusContent(root.barConfig)

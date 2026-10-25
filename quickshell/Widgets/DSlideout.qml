@@ -293,7 +293,7 @@ PanelWindow {
             Rectangle {
                 anchors.fill: parent
                 color: Theme.isConnectedEffect && !root.frameOwnsConnectedChrome ? contentRect.slideoutSurfaceColor : "transparent"
-                radius: Theme.isConnectedEffect ? Theme.connectedSurfaceRadius : Theme.windowRadius
+                radius: Theme.isConnectedEffect ? Theme.connectedSurfaceRadius : Theme.surfaceRadius
                 border.color: Theme.isConnectedEffect ? Theme.withAlpha(BlurService.borderColor, 0) : BlurService.borderColor
                 border.width: Theme.isConnectedEffect ? 0 : BlurService.borderWidth
             }
@@ -394,6 +394,6 @@ PanelWindow {
         blurY: root.slideoutBlurActive ? slideContainer.y : 0
         blurWidth: root.slideoutBlurActive ? slideContainer.width : 0
         blurHeight: root.slideoutBlurActive ? slideContainer.height : 0
-        blurRadius: Theme.isConnectedEffect ? Theme.connectedSurfaceRadius : Theme.windowRadius
+        blurRadius: Theme.isConnectedEffect ? Theme.connectedSurfaceRadius : Theme.surfaceRadius
     }
 }
