@@ -191,8 +191,9 @@ PanelWindow {
 
             readonly property string _side: dockBlur.descriptor.barSide
             readonly property bool _active: _dockBodyBlurAnchor._active && _dockBodyBlurAnchor.width > 0 && _dockBodyBlurAnchor.height > 0
-            readonly property int _capWidth: (_side === "left" || _side === "right") ? Math.round(Math.min(dockBlur.connectorRadius, _dockBodyBlurAnchor.width)) : _dockBodyBlurAnchor.width
-            readonly property int _capHeight: (_side === "top" || _side === "bottom") ? Math.round(Math.min(dockBlur.connectorRadius, _dockBodyBlurAnchor.height)) : _dockBodyBlurAnchor.height
+            // the body's rounding, as _popoutBlurCapThickness
+            readonly property int _capWidth: (_side === "left" || _side === "right") ? Math.round(Math.min(dockBlur.bodyRadius, _dockBodyBlurAnchor.width)) : _dockBodyBlurAnchor.width
+            readonly property int _capHeight: (_side === "top" || _side === "bottom") ? Math.round(Math.min(dockBlur.bodyRadius, _dockBodyBlurAnchor.height)) : _dockBodyBlurAnchor.height
 
             x: !_active ? 0 : (_side === "right" ? _dockBodyBlurAnchor.x + _dockBodyBlurAnchor.width - _capWidth : _dockBodyBlurAnchor.x)
             y: !_active ? 0 : (_side === "bottom" ? _dockBodyBlurAnchor.y + _dockBodyBlurAnchor.height - _capHeight : _dockBodyBlurAnchor.y)
@@ -215,7 +216,7 @@ PanelWindow {
         }
         Region {
             readonly property bool _active: _dockBodyBlurAnchor._active && dockBlur.farStartRadius > 0
-            readonly property var _rect: SurfaceGeometry.farBodyCapRect(dockBlur.descriptor.barSide, dockBlur.geometry, "left", dockBlur.farStartRadius, win._dpr)
+            readonly property var _rect: SurfaceGeometry.farBodyCapRect(dockBlur.descriptor.barSide, dockBlur.geometry, "left", dockBlur.bodyRadius, win._dpr)
 
             x: _active ? Math.round(_rect.x) : 0
             y: _active ? Math.round(_rect.y) : 0
@@ -224,7 +225,7 @@ PanelWindow {
         }
         Region {
             readonly property bool _active: _dockBodyBlurAnchor._active && dockBlur.farEndRadius > 0
-            readonly property var _rect: SurfaceGeometry.farBodyCapRect(dockBlur.descriptor.barSide, dockBlur.geometry, "right", dockBlur.farEndRadius, win._dpr)
+            readonly property var _rect: SurfaceGeometry.farBodyCapRect(dockBlur.descriptor.barSide, dockBlur.geometry, "right", dockBlur.bodyRadius, win._dpr)
 
             x: _active ? Math.round(_rect.x) : 0
             y: _active ? Math.round(_rect.y) : 0
@@ -354,7 +355,6 @@ PanelWindow {
     readonly property real _effectivePopoutEndCcr: win._popoutRadii.end
     readonly property real _effectivePopoutFarStartCcr: win._popoutRadii.farStart
     readonly property real _effectivePopoutFarEndCcr: win._popoutRadii.farEnd
-    readonly property real _effectivePopoutMaxCcr: Math.max(win._effectivePopoutStartCcr, win._effectivePopoutEndCcr)
     readonly property real _effectivePopoutFarExtent: Math.max(win._effectivePopoutFarStartCcr, win._effectivePopoutFarEndCcr)
     readonly property var _notifNearRadii: SurfaceGeometry.connectorRadii(win._notifDescriptor, win._notifBodyGeometry, win._ccr, win._surfaceRadius, win._dpr, true)
     readonly property var _notifFarRadii: SurfaceGeometry.connectorRadii(win._notifDescriptor, win._notifBodyScene(), win._ccr, win._surfaceRadius, win._dpr, true)
@@ -364,10 +364,8 @@ PanelWindow {
     readonly property real _effectiveNotifEndCcr: win._notifNearRadii.end
     readonly property real _effectiveNotifFarStartCcr: win._notifFarRadii.farStart
     readonly property real _effectiveNotifFarEndCcr: win._notifFarRadii.farEnd
-    readonly property real _effectiveNotifMaxCcr: Math.max(win._effectiveNotifStartCcr, win._effectiveNotifEndCcr)
     readonly property real _effectiveNotifFarExtent: Math.max(win._effectiveNotifFarStartCcr, win._effectiveNotifFarEndCcr)
     readonly property var _modalRadii: SurfaceGeometry.connectorRadii(win._modalDescriptor, win._modalBodyGeometry, win._ccr, win._surfaceRadius, win._dpr, true)
-    readonly property real _effectiveModalCcr: win._modalRadii.near
     readonly property real _effectiveModalFarCcr: win._modalRadii.far
     readonly property real _effectiveModalStartCcr: win._modalRadii.start
     readonly property real _effectiveModalEndCcr: win._modalRadii.end
@@ -423,22 +421,23 @@ PanelWindow {
         const omitS = s.radii.farStartCr > 0;
         const omitE = s.radii.farEndCr > 0;
         const bodyR = s.radii.surfaceRadius;
-        const nearS = omitS ? bodyR : 0, nearE = omitE ? bodyR : 0;
+        // near corners stay square at a flush end too: a round one only met the frame's cutout corner when both radii
+        // matched, and there is no cutout corner where frameOnDemand draws no side
         const farS = omitS ? 0 : bodyR, farE = omitE ? 0 : bodyR;
         const kS = omitS ? fc : sc, kE = omitE ? fc : ec;
         let ks, cr;
         if (s.side === "top") {
             ks = [kS, kE, fc, fc];
-            cr = [nearS, nearE, farE, farS];
+            cr = [0, 0, farE, farS];
         } else if (s.side === "bottom") {
             ks = [fc, fc, kE, kS];
-            cr = [farS, farE, nearE, nearS];
+            cr = [farS, farE, 0, 0];
         } else if (s.side === "left") {
             ks = [kS, fc, fc, kE];
-            cr = [nearS, farS, farE, nearE];
+            cr = [0, farS, farE, 0];
         } else {
             ks = [fc, kS, kE, fc];
-            cr = [farS, nearS, nearE, farE];
+            cr = [farS, 0, 0, farE];
         }
         return {
             "rect": Qt.vector4d(b.x, b.y, b.width, b.height),
@@ -473,9 +472,10 @@ PanelWindow {
         return win._sdfSlot({
             "side": island.descriptor.barSide,
             "body": island.body,
-            // a tethered end has no fillet into the bar and a far fillet into the screen's side (connectorRadii)
+            // a tethered end has no fillet into the bar and a far fillet into the screen's side (connectorRadii); an
+            // untethered island's far corners never fillet into a frame side it sits beside
             "radii": {
-                "farCr": 0,
+                "farCr": island.radii.farExtent,
                 "startCr": island.radii.start,
                 "endCr": island.radii.end,
                 "farStartCr": island.radii.farStart,
@@ -713,7 +713,7 @@ PanelWindow {
             id: _notifBodyBlurCap
 
             readonly property string _side: win._notifDescriptor.barSide
-            readonly property real _capRadius: win._effectiveNotifMaxCcr
+            readonly property real _capRadius: win._surfaceRadius
             readonly property bool _active: _notifBodySceneBlurAnchor._active && _notifBodySceneBlurAnchor.width > 0 && _notifBodySceneBlurAnchor.height > 0 && _capRadius > 0
             readonly property int _capWidth: (_side === "left" || _side === "right") ? Math.round(Math.min(_capRadius, _notifBodySceneBlurAnchor.width)) : _notifBodySceneBlurAnchor.width
             readonly property int _capHeight: (_side === "top" || _side === "bottom") ? Math.round(Math.min(_capRadius, _notifBodySceneBlurAnchor.height)) : _notifBodySceneBlurAnchor.height
@@ -906,14 +906,16 @@ PanelWindow {
         };
     }
 
+    // The bar-side caps square off the body's rounding, as the SDF draws the near corners square; under flat the
+    // connectors are smaller than that rounding.
     function _modalBlurCapThickness() {
         const extent = win._modalArcExtent;
-        return Math.max(0, Math.min(win._effectiveModalCcr, extent - win._surfaceRadius));
+        return Math.max(0, Math.min(win._surfaceRadius, extent - win._surfaceRadius));
     }
 
     function _popoutBlurCapThickness() {
         const extent = win._popoutArcExtent;
-        return Math.max(0, Math.min(win._effectivePopoutMaxCcr, extent - win._surfaceRadius));
+        return Math.max(0, Math.min(win._surfaceRadius, extent - win._surfaceRadius));
     }
 
     function _unifiedSurfaces() {
