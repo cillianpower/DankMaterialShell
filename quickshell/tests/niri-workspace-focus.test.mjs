@@ -2,14 +2,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
+import { loadScript } from "./qml-script.mjs";
 
 const source = readFileSync(new URL("../Services/NiriService.qml", import.meta.url), "utf8");
 
 function fixture() {
-    const context = vm.createContext({ workspaces: {}, allWorkspaces: [] });
+    const FocusMotion = loadScript(new URL("../Common/FocusMotion.js", import.meta.url));
+    const context = vm.createContext({ workspaces: {}, allWorkspaces: [], FocusMotion, _focusMotionTracker: FocusMotion.tracker(), focusMotion: { serial: 0 } });
     context.root = context;
     for (const [, name, args, body] of source.matchAll(/^    function (\w+)\(([^)]*)\) \{([\s\S]*?)^    \}/gm)) {
-        if (["setWorkspaces", "handleWorkspacesChanged", "handleWorkspaceActivated", "updateCurrentOutputWorkspaces"].includes(name))
+        if (["setWorkspaces", "handleWorkspacesChanged", "handleWorkspaceActivated", "updateCurrentOutputWorkspaces", "publishFocusMotion"].includes(name))
             vm.runInContext(`function ${name}(${args}) {${body}}`, context);
     }
     context.handleWorkspacesChanged({ workspaces: [
