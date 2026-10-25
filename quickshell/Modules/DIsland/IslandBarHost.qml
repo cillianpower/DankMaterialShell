@@ -433,6 +433,7 @@ Item {
         flushEnd: root.flushEnd
         menuBarFace: root.setting("islandMenuBarFace")
         pageKeys: root.setting("islandPageKeys")
+        notificationCenterNarrow: root.setting("islandNotificationCenterNarrow")
         clockTimeHost: clockTime.enabled ? clockTime : null
         motionRunning: root.motionRunning
         dotSize: root.dotSize * root.freeScale

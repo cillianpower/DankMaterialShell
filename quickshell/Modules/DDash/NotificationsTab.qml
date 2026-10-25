@@ -20,6 +20,8 @@ FocusScope {
     readonly property bool hasNotifications: list.count > 0
     readonly property Item focusTarget: root
     property bool blocksTabNavigation: false
+    // as tall as the list of current notifications (and the footer), not the dash's minimum (the island's narrow centre)
+    property bool fitList: false
     activeFocusOnTab: interactive
 
     function handleKeyEvent(event) {
@@ -89,7 +91,7 @@ FocusScope {
             viewport.contentY = Math.max(0, Math.min(point.y, bottom));
     }
 
-    implicitHeight: DashMetrics.tabMinHeight
+    implicitHeight: fitList && currentTab === 0 ? list.stableContentHeight + footer.height + Theme.spacingM : DashMetrics.tabMinHeight
     enabled: interactive
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
@@ -143,7 +145,7 @@ FocusScope {
         keyboardController: keyboard
         focusAllowed: root.activeFocus
         transientSurfaceTracker: root.surfaces
-        trackStableContentHeight: false
+        trackStableContentHeight: root.fitList
     }
 
     Loader {

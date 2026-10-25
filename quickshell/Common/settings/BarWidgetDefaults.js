@@ -50,6 +50,9 @@ var ISLAND_DEFAULTS = {
     islandTether: false,
     // Ctrl+Left and Ctrl+Right (and Ctrl+Tab) walk the pages a bar's island face opens, in the face's order
     islandPageKeys: false,
+    // the notification centre opens as wide as a notification the island shows, and as tall as its list, not as a
+    // dash page
+    islandNotificationCenterNarrow: false,
     islandHomeClockDisplay: "both",
     islandHomeVolumeDisplay: "both",
     islandHomeBrightnessDisplay: "both",

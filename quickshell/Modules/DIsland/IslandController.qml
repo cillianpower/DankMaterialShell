@@ -9,6 +9,7 @@ import qs.Modals.DLauncherV2.Components
 import qs.Modules.ControlCenter
 import qs.Modules.DBar
 import qs.Modules.DDash
+import qs.Modules.Notifications
 
 QtObject {
     id: root
@@ -514,7 +515,9 @@ QtObject {
     readonly property var systemExpandedTarget: sheetTarget(460, 176)
     readonly property var notificationCompactTarget: pillTarget(Math.ceil(Math.max(notificationCompactMinLength, Math.min(notificationCompactMaxLength, notificationContentLength))), compactFaceThickness)
     readonly property var notificationExpandedTarget: sheetTarget(520, 220)
-    readonly property var notificationCenterExpandedTarget: dashboardTargetFor("notificationcenter")
+    // islandNotificationCenterNarrow: as wide as a notification the island shows, as tall as its list
+    property bool notificationCenterNarrow: false
+    readonly property var notificationCenterExpandedTarget: notificationCenterNarrow ? sheetTarget(Math.min(dashboardAvailableWidth, notificationExpandedTarget.width), Math.min(dashboardAvailableHeight, Math.max(NotificationMetrics.centerMinHeight, dashboardContentHeights["notificationcenter"] ?? 0))) : dashboardTargetFor("notificationcenter")
     readonly property var clipboardExpandedTarget: sheetTarget(Math.min(dashboardAvailableWidth, ClipboardConstants.sizeWidth(SettingsData.clipboardSize)), Math.min(dashboardAvailableHeight, ClipboardConstants.sizeHeight(SettingsData.clipboardSize)))
     readonly property var powerMenuExpandedTarget: sheetTarget(Math.max(1, Math.min(dashboardAvailableWidth, powerMenuContentWidth)), Math.max(1, Math.min(dashboardAvailableHeight, destinationContentHeight("powermenu"))))
 

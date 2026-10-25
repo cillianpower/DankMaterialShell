@@ -21,7 +21,16 @@ FocusScope {
     readonly property bool live: root.controller.expanded && root.controller.activeActivity === root.activityId
     readonly property var tab: tabLoader.item
     readonly property real tabHeight: tab?.implicitHeight ?? 0
-    readonly property real contentHeight: DashMetrics.panelHeightFor(entryId, tabHeight)
+    // islandNotificationCenterNarrow: the notification centre is as tall as its list, not a whole number of dash rows
+    readonly property bool listHeight: root.activityId === "notificationcenter" && root.controller.notificationCenterNarrow
+    readonly property real contentHeight: listHeight ? tabHeight : DashMetrics.panelHeightFor(entryId, tabHeight)
+
+    Binding {
+        target: root.tab
+        property: "fitList"
+        value: root.listHeight
+        when: !!root.tab && root.tab.fitList !== undefined
+    }
     readonly property bool handleHeader: !root.editMode
     readonly property real pillOverhang: editMode ? DashMetrics.islandPillOverhang : 0
     readonly property int panelColumns: DashMetrics.panelColumnsFor(entryId)
