@@ -78,17 +78,23 @@ Item {
             return Theme.onSurface_12;
         return bodyActive ? CcMetrics.tileActiveColor : CcMetrics.tileInactiveColor;
     }
-    readonly property color contentColor: {
+    // flat: the tile's content lifts on hover and dims on press, in place of the state layer
+    readonly property bool raised: bodyLayer.containsMouse || boxLayer.containsMouse
+    readonly property bool held: bodyLayer.pressed || boxLayer.pressed
+    readonly property color contentColor: contentTween.value
+    readonly property color subtitleColor: subtitleTween.value
+    readonly property color iconColor: iconTween.value
+    readonly property color idleContentColor: {
         if (!available)
             return Theme.onSurface_38;
         return bodyActive ? CcMetrics.tileActiveContent : CcMetrics.tileInactiveContent;
     }
-    readonly property color subtitleColor: {
+    readonly property color idleSubtitleColor: {
         if (!available)
             return Theme.onSurface_38;
         return bodyActive ? CcMetrics.tileActiveContent : CcMetrics.tileInactiveSubtitle;
     }
-    readonly property color iconColor: {
+    readonly property color idleIconColor: {
         if (!available)
             return Theme.onSurface_38;
         if (hasIconBox)
@@ -100,15 +106,33 @@ Item {
             return CcMetrics.tileInactiveContent;
         return bodyActive ? CcMetrics.tileActiveContent : root.restIconColor;
     }
+    DColorAnimation {
+        id: contentTween
+        to: Theme.stateContent(root.idleContentColor, root.raised, root.held)
+        animated: Theme.flatComponents && CcMetrics.animationsEnabled
+        duration: Theme.expressiveDurations.expressiveFastEffects
+    }
+    DColorAnimation {
+        id: subtitleTween
+        to: Theme.stateContent(root.idleSubtitleColor, root.raised, root.held)
+        animated: Theme.flatComponents && CcMetrics.animationsEnabled
+        duration: Theme.expressiveDurations.expressiveFastEffects
+    }
+    DColorAnimation {
+        id: iconTween
+        to: Theme.stateContent(root.idleIconColor, root.raised, root.held)
+        animated: Theme.flatComponents && CcMetrics.animationsEnabled
+        duration: Theme.expressiveDurations.expressiveFastEffects
+    }
     readonly property color iconBoxColor: {
         if (!available)
             return Theme.onSurface_12;
         return showsActive ? CcMetrics.tileActiveColor : CcMetrics.iconBoxInactiveColor;
     }
 
-    property real bodyRadius: bodyLayer.pressed ? Math.min(Theme.cornerRadiusM, width / 2, bodyHeight / 2) : restRadius
+    property real bodyRadius: bodyLayer.pressed && !Theme.flatComponents ? Math.min(Theme.cornerRadiusM, width / 2, bodyHeight / 2) : restRadius
     property real iconBoxRadius: {
-        if (boxLayer.pressed)
+        if (boxLayer.pressed && !Theme.flatComponents)
             return Math.min(Theme.cornerRadiusS, CcMetrics.iconBoxSize / 2);
         if (showsActive)
             return Math.min(CcMetrics.iconBoxActiveRadius, CcMetrics.iconBoxSize / 2);

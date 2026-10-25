@@ -423,6 +423,8 @@ Item {
         id: connectivityIcon
 
         required property string type
+        property bool raised: false
+        property bool held: false
 
         width: root.iconSize
         height: root.iconSize
@@ -435,7 +437,7 @@ Item {
             anchors.centerIn: parent
             name: root.connectivityIconName(connectivityIcon.type)
             size: root.statusIconSize
-            color: root.connectivityIconColor(connectivityIcon.type)
+            color: Theme.stateContent(root.connectivityIconColor(connectivityIcon.type), connectivityIcon.raised, connectivityIcon.held)
 
             DBlink {
                 target: connectivityGlyph
@@ -537,6 +539,13 @@ Item {
         readonly property string levelDisplay: group.isVolume ? root.controller.homeVolumeDisplay : root.controller.homeBrightnessDisplay
         readonly property int levelPercent: group.isVolume ? root.volumePercent : root.brightnessPercent
         readonly property string levelReserve: group.isVolume ? String(AudioService.sinkMaxVolume) : "100"
+        // the menu bar face: lit while its page is open (IslandController.litFaceGroup)
+        readonly property bool lit: root.controller.litFaceGroup === group.groupId
+        readonly property bool raised: groupArea.containsMouse || group.lit
+
+        function lift(base) {
+            return Theme.stateContent(base, group.raised, groupArea.pressed);
+        }
 
         width: group.vertical ? root.width : (group.iconOnly ? root.iconSize : content.implicitWidth)
         height: group.vertical ? content.implicitHeight : root.slotSize
@@ -558,10 +567,8 @@ Item {
             width: group.vertical ? root.slotSize : parent.width + Theme.spacingS
             height: group.vertical ? parent.height + Theme.spacingXS : root.slotSize
             radius: group.vertical ? Theme.cornerRadius : Theme.fullRadius(width, height)
-            // the menu bar face: lit while its page is open (IslandController.litFaceGroup)
-            readonly property bool lit: root.controller.litFaceGroup === group.groupId
-            color: lit ? Theme.withAlpha(Theme.surfaceText, 0.16) : groupArea.containsMouse ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent"
-            visible: lit || !group.isClock && !group.isTray && (group.vertical || !group.usesBattery)
+            color: group.lit ? Theme.withAlpha(Theme.surfaceText, 0.16) : groupArea.containsMouse ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent"
+            visible: group.lit || !group.isClock && !group.isTray && (group.vertical || !group.usesBattery)
         }
 
         Grid {
@@ -576,7 +583,10 @@ Item {
             Loader {
                 active: group.isClock
                 visible: active
-                sourceComponent: IslandClock {}
+                sourceComponent: IslandClock {
+                    dateColor: group.lift(Theme.surfaceTextMedium)
+                    separatorColor: group.lift(Theme.flatComponents ? Theme.textTertiary : Theme.primary)
+                }
             }
 
             Loader {
@@ -603,20 +613,20 @@ Item {
                 visible: group.isMedia && !root.controller.mediaAvailable
                 name: "search"
                 size: root.iconSize
-                color: Theme.surfaceTextMedium
+                color: group.lift(Theme.surfaceTextMedium)
             }
 
             DIcon {
                 visible: group.isWeather
                 name: WeatherService.getWeatherIcon(WeatherService.weather.wCode)
                 size: root.statusIconSize
-                color: Theme.surfaceTextSecondary
+                color: group.lift(Theme.surfaceTextSecondary)
             }
 
             StyledText {
                 visible: group.isWeather
                 text: WeatherService.currentTempText()
-                color: Theme.surfaceTextSecondary
+                color: group.lift(Theme.surfaceTextSecondary)
                 font.pixelSize: root.textSize
             }
 
@@ -624,13 +634,13 @@ Item {
                 visible: group.isNotifications
                 name: "notifications"
                 size: root.statusIconSize
-                color: Theme.flatComponents ? Theme.textSecondary : Theme.secondary
+                color: group.lift(Theme.flatComponents ? Theme.textSecondary : Theme.secondary)
             }
 
             StyledText {
                 visible: group.isNotifications
                 text: root.controller.unreadNotificationCount
-                color: Theme.surfaceTextSecondary
+                color: group.lift(Theme.surfaceTextSecondary)
                 font.pixelSize: root.textSize
             }
 
@@ -638,14 +648,14 @@ Item {
                 visible: group.isSystemLevel && (group.vertical || group.levelDisplay !== "percentage")
                 name: group.isVolume ? AudioService.sinkVolumeIconName : BrightnessService.brightnessIconName(root.brightnessDevice, BrightnessService.brightnessLevel)
                 size: root.statusIconSize
-                color: Theme.surfaceTextSecondary
+                color: group.lift(Theme.surfaceTextSecondary)
             }
 
             NumericText {
                 visible: group.isSystemLevel && group.levelDisplay !== "icon"
                 text: group.vertical ? group.levelPercent : group.levelPercent + "%"
                 reserveText: group.vertical ? group.levelReserve : group.levelReserve + "%"
-                color: Theme.surfaceTextSecondary
+                color: group.lift(Theme.surfaceTextSecondary)
                 font.pixelSize: root.textSize
             }
 
@@ -666,10 +676,14 @@ Item {
 
                 ConnectivityIcon {
                     type: "wifi"
+                    raised: group.raised
+                    held: groupArea.pressed
                 }
 
                 ConnectivityIcon {
                     type: "bluetooth"
+                    raised: group.raised
+                    held: groupArea.pressed
                 }
             }
 
@@ -698,7 +712,7 @@ Item {
                 visible: group.isStatus && !group.usesBattery && !group.usesConnectivity
                 name: "tune"
                 size: root.iconSize
-                color: Theme.surfaceText
+                color: group.lift(Theme.flatComponents ? Theme.textSecondary : Theme.surfaceText)
             }
 
             Repeater {
@@ -765,6 +779,8 @@ Item {
                             source: root.trayIconSourceFor(trayItemRoot.trayItem)
                             iconSize: root.statusIconSize
                             fallbackTextColor: Theme.surfaceTextSecondary
+                            // flat: the secondary level at rest, raised on hover
+                            opacity: !Theme.flatComponents ? 1 : trayMouseArea.pressed ? Theme.pressedContentAlpha : trayItemRoot.hovered ? 1 : Theme.levelSecondaryAlpha
                         }
                     }
 
@@ -927,7 +943,7 @@ Item {
                         }
                     }
                     size: root.statusIconSize
-                    color: Theme.surfaceText
+                    color: Theme.stateContent(Theme.flatComponents ? Theme.textSecondary : Theme.surfaceText, caretRoot.hovered, caretArea.pressed)
                 }
 
                 MouseArea {

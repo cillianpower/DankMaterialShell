@@ -37,7 +37,7 @@ Item {
     property real crossEdgeExtension: 0
     property string segmentRole: "solo"
     property real splitOffset: 0
-    readonly property color defaultContentColor: Theme.widgetTextColor
+    readonly property color defaultContentColor: Theme.stateContent(Theme.widgetTextColor, isMouseHovered, pressed)
     property color contentColor: defaultContentColor
     readonly property real dpr: parentScreen ? CompositorService.getScreenScale(parentScreen) : 1
     readonly property real horizontalPadding: Theme.snap((barConfig?.widgetPadding ?? 8) * (widgetThickness / 30), dpr)
