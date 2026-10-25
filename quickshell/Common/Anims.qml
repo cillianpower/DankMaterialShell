@@ -27,10 +27,23 @@ Singleton {
     readonly property var standardDecel: [0.00, 0.00, 0.00, 1.00, 1.00, 1.00]
     readonly property var standardAccel: [0.30, 0.00, 1.00, 1.00, 1.00, 1.00]
 
-    // springSmoothCriticallyDamped, with Smooth motion (springBounce 0): springs exactly critically damped and a curve
-    // fitted to one, which never passes its target.
+    // springSmoothCriticallyDamped, with Smooth motion (springBounce 0): every spring critically damped, never past its
+    // target, on two springs (surfaces, and small state changes), with fixed durations on a curve fitted to them.
     readonly property bool smoothMotion: typeof SettingsData !== "undefined" && SettingsData.springSmoothCriticallyDamped && Math.round(SettingsData.springBounce) === 0
+    // fits the surface spring over surfaceDuration and the small spring over smallDuration (238·√1500 ≈ 145·√4000)
     readonly property var smoothSpatial: [0.3, 0.55, 0.05, 1, 1, 1]
+    readonly property var surfaceSpring: ({
+            "stiffness": 1500,
+            "damping": 2 * Math.sqrt(1500),
+            "mass": 1
+        })
+    readonly property var smallSpring: ({
+            "stiffness": 4000,
+            "damping": 2 * Math.sqrt(4000),
+            "mass": 1
+        })
+    readonly property int surfaceDuration: 238
+    readonly property int smallDuration: 145
 
     // Used by AnimVariants for variant/effect logic
     readonly property var expressiveDefaultSpatial: smoothMotion ? smoothSpatial : [0.38, 1.21, 0.22, 1, 1, 1]

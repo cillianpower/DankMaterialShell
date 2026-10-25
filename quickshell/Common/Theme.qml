@@ -990,14 +990,14 @@ Singleton {
         "emphasized": [0.05, 0, 2 / 15, 0.06, 1 / 6, 0.4, 5 / 24, 0.82, 0.25, 1, 1, 1],
         "emphasizedAccel": [0.3, 0, 0.8, 0.15, 1, 1],
         "emphasizedDecel": [0.05, 0.7, 0.1, 1, 1, 1],
-        "standard": [0.2, 0, 0, 1, 1, 1],
+        "standard": Anims.smoothMotion ? Anims.smoothSpatial : [0.2, 0, 0, 1, 1, 1],
         "standardAccel": [0.3, 0, 1, 1, 1, 1],
-        "standardDecel": [0, 0, 0, 1, 1, 1],
+        "standardDecel": Anims.smoothMotion ? Anims.smoothSpatial : [0, 0, 0, 1, 1, 1],
         "expressiveFastSpatial": Anims.smoothMotion ? Anims.smoothSpatial : [0.42, 1.67, 0.21, 0.9, 1, 1],
         "expressiveDefaultSpatial": Anims.smoothMotion ? Anims.smoothSpatial : [0.38, 1.21, 0.22, 1, 1, 1],
         "expressiveSlowSpatial": Anims.smoothMotion ? Anims.smoothSpatial : [0.39, 1.29, 0.35, 0.98, 1, 1],
-        "expressiveFastEffects": [0.31, 0.94, 0.34, 1, 1, 1],
-        "expressiveEffects": [0.34, 0.8, 0.34, 1, 1, 1],
+        "expressiveFastEffects": Anims.smoothMotion ? Anims.smoothSpatial : [0.31, 0.94, 0.34, 1, 1, 1],
+        "expressiveEffects": Anims.smoothMotion ? Anims.smoothSpatial : [0.34, 0.8, 0.34, 1, 1, 1],
         "expressiveSlowEffects": [0.34, 0.88, 0.34, 1, 1, 1]
     }
 
@@ -1071,16 +1071,18 @@ Singleton {
         }
 
         const baseDuration = currentAnimationBaseDuration;
+        // smooth motion: small state changes run as long as the small spring settles, whatever the base
+        const small = Anims.smoothMotion && baseDuration > 0;
         return {
-            "fast": baseDuration * 0.4,
+            "fast": small ? Anims.smallDuration : baseDuration * 0.4,
             "normal": baseDuration * 0.8,
             "large": baseDuration * 1.2,
             "extraLarge": baseDuration * 2.0,
-            "expressiveFastSpatial": baseDuration * 0.7,
+            "expressiveFastSpatial": small ? Anims.smallDuration : baseDuration * 0.7,
             "expressiveDefaultSpatial": baseDuration,
             "expressiveSlowSpatial": baseDuration * 1.3,
-            "expressiveFastEffects": baseDuration * 0.3,
-            "expressiveEffects": baseDuration * 0.4,
+            "expressiveFastEffects": small ? Anims.smallDuration : baseDuration * 0.3,
+            "expressiveEffects": small ? Anims.smallDuration : baseDuration * 0.4,
             "expressiveSlowEffects": baseDuration * 0.6
         };
     }
@@ -1121,6 +1123,8 @@ Singleton {
     }
 
     function springPreset(name, baseDuration) {
+        if (name === "fast" && Anims.smoothMotion && !springMotionDisabled)
+            return Anims.smallSpring;
         return tunedSpring(springSpecs[name] ?? springSpecs["default"], baseDuration);
     }
 

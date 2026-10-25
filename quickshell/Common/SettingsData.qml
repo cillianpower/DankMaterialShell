@@ -308,7 +308,8 @@ Singleton {
     property bool scrollbarsEnabled: Spec.SPEC.scrollbarsEnabled.def
     onScrollbarsEnabledChanged: saveSettings()
     property int motionEffect: SettingsData.AnimationEffect.Standard
-    // Smooth (springBounce 0) is exactly critically damped (Anims.smoothMotion); off, its springs are 0.85-0.95 of it
+    // Smooth (springBounce 0) becomes Anims.smoothMotion: every spring critically damped, small state changes on a stiffer
+    // spring and its duration, standard and effect curves fitted to a spring; off, the Smooth springs are 0.85-0.95 of it
     property bool springSmoothCriticallyDamped: Spec.SPEC.springSmoothCriticallyDamped.def
     onSpringSmoothCriticallyDampedChanged: saveSettings()
     onMotionEffectChanged: saveSettings()
