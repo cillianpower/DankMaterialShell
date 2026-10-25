@@ -470,20 +470,29 @@ var LOCAL_SPEC = {
     motionEffect: {
         def: 0
     },
+    shellShadowEnabled: {
+        def: false,
+        onChange: "updateCompositorLayout"
+    },
     shellShadowSoftness: {
-        def: 30
+        def: 30,
+        onChange: "updateCompositorLayout"
     },
     shellShadowSpread: {
-        def: 5
+        def: 5,
+        onChange: "updateCompositorLayout"
     },
     shellShadowOffsetX: {
-        def: 0
+        def: 0,
+        onChange: "updateCompositorLayout"
     },
     shellShadowOffsetY: {
-        def: 5
+        def: 5,
+        onChange: "updateCompositorLayout"
     },
     shellShadowColor: {
-        def: "#0007"
+        def: "#0007",
+        onChange: "updateCompositorLayout"
     },
     m3ElevationEnabled: {
         def: true

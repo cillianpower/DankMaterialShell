@@ -146,17 +146,6 @@ Singleton {
         }
     }
 
-    // niri's window shadow is one set of values the frame also draws: a change reaches niri's layout config
-    Connections {
-        target: SettingsData
-        enabled: CompositorService.isNiri
-        function onShellShadowSoftnessChanged() { generateNiriLayoutConfig(); }
-        function onShellShadowSpreadChanged() { generateNiriLayoutConfig(); }
-        function onShellShadowOffsetXChanged() { generateNiriLayoutConfig(); }
-        function onShellShadowOffsetYChanged() { generateNiriLayoutConfig(); }
-        function onShellShadowColorChanged() { generateNiriLayoutConfig(); }
-    }
-
     Connections {
         target: CompositorService
         function onIsNiriChanged() {
@@ -1314,7 +1303,7 @@ window-rule {
 
 `;
 
-        const shellShadowConfig = typeof SettingsData !== "undefined" ? {
+        const shellShadowConfig = typeof SettingsData !== "undefined" && SettingsData.shellShadowEnabled ? {
             "softness": SettingsData.shellShadowSoftness,
             "spread": SettingsData.shellShadowSpread,
             "offsetX": SettingsData.shellShadowOffsetX,
@@ -1324,7 +1313,10 @@ window-rule {
         const layoutLines = [];
         if (manageGaps)
             layoutLines.push(`    gaps ${gaps}`, "");
-        layoutLines.push("    border {", `        width ${borderSize}`, "    }", "", "    focus-ring {", `        width ${borderSize}`, "    }", "", ShellShadow.niriBlock(shellShadowConfig));
+        layoutLines.push("    border {", `        width ${borderSize}`, "    }", "", "    focus-ring {", `        width ${borderSize}`, "    }");
+        // shellShadowEnabled: niri's window shadow is the one the frame draws
+        if (shellShadowConfig)
+            layoutLines.push("", ShellShadow.niriBlock(shellShadowConfig));
 
         const configContent = dmsWarning + `layout {
 ${layoutLines.join("\n")}

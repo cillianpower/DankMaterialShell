@@ -1205,14 +1205,21 @@ PanelWindow {
         visible: win._connectedActive
         fragmentShader: Qt.resolvedUrl("../../Shaders/qsb/connected_arc.frag.qsb")
 
+        // niri's window shadow (shellShadowEnabled) or the elevation shadow with its ambient term
+        readonly property bool _niri: SettingsData.shellShadowEnabled
         readonly property var _shadow: Theme.shellShadow
+        readonly property var _level: Theme.elevationLevel2
+        readonly property color _shadowTint: _niri ? Qt.rgba(_shadow.color.r, _shadow.color.g, _shadow.color.b, _shadow.color.a) : Theme.elevationShadowColor(_level)
+        readonly property var _ambient: Theme.elevationAmbient(_level)
         property real widthPx: width
         property real heightPx: height
         property real cutoutRadius: win.cutoutRadius
         property vector4d cutout: Qt.vector4d(win.cutoutLeftInset, win.cutoutTopInset, win.width - win.cutoutRightInset, win.height - win.cutoutBottomInset)
         property vector4d surfaceColor: Qt.vector4d(win._surfaceColor.r, win._surfaceColor.g, win._surfaceColor.b, win._surfaceColor.a)
-        property vector4d shadowColor: Qt.vector4d(_shadow.color.r, _shadow.color.g, _shadow.color.b, win._elevationShadow ? _shadow.color.a * win._focusFade : 0)
-        property vector4d shadowParam: Qt.vector4d(_shadow.sigma, _shadow.spread, _shadow.offsetX, _shadow.offsetY)
+        property vector4d shadowColor: Qt.vector4d(_shadowTint.r, _shadowTint.g, _shadowTint.b, win._elevationShadow ? _shadowTint.a * (_niri ? win._focusFade : 1) : 0)
+        property vector4d shadowParam: _niri ? Qt.vector4d(_shadow.sigma, _shadow.spread, _shadow.offsetX, _shadow.offsetY) : Qt.vector4d(Math.max(0, _level.blurPx), Math.max(0, _level.spreadPx), Theme.elevationOffsetXFor(_level, Theme.elevationLightDirection, 4), Theme.elevationOffsetYFor(_level, Theme.elevationLightDirection, 4))
+        property vector4d ambientParam: Qt.vector4d(_ambient.blurPx, _ambient.spreadPx, win._elevationShadow && !_niri ? _ambient.alpha : 0, 0)
+        property vector4d shadowModel: Qt.vector4d(_niri ? 1 : 0, 0, 0, 0)
         property vector4d chromeRect0: win._sdfSlots[0].rect
         property vector4d chromeCorner0: win._sdfSlots[0].corner
         property vector4d chromeK0: win._sdfSlots[0].k

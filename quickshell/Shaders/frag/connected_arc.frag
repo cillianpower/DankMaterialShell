@@ -13,8 +13,10 @@ layout(std140, binding = 0) uniform buf {
     float cutoutRadius;
     vec4 cutout;        // inner cutout edges in px: x=left y=top z=right w=bottom
     vec4 surfaceColor;  // straight (non-premultiplied) rgba
-    vec4 shadowColor;   // straight rgba; a = 0 disables the shadow
-    vec4 shadowParam;   // niri's window shadow: x = sigma px (niri: softness / 2), y = spread px, z,w = offset px
+    vec4 shadowColor;   // straight rgba; a = 0 disables both shadow terms
+    vec4 shadowParam;   // key: x = blur px (niri's model: sigma, softness / 2), y = spread px, z,w = offset px
+    vec4 ambientParam;  // ambient: x = blur px, y = spread px, z = alpha
+    vec4 shadowModel;   // x > 0.5: niri's window shadow (shellShadowEnabled), with no ambient term
     // Six chrome slots: rect = x,y,w,h px; corner and k = per-corner radii and junction fillets (TL, TR, BR, BL),
     // a corner is sharp exactly where its k > 0; param.x = active.
     vec4 chromeRect0;
@@ -104,31 +106,47 @@ float sceneDist(vec2 px, vec4 cutout) {
 void main() {
     vec2 px = qt_TexCoord0 * vec2(ubuf.widthPx, ubuf.heightPx);
     float d = sceneDist(px, ubuf.cutout);
-    // a screen edge with no bar or panel on it (frameOnDemand) has no frame there: it must not cast a shadow inward
-    vec4 cutS = ubuf.cutout;
-    if (cutS.x < 0.5) cutS.x -= 4096.0;
-    if (cutS.y < 0.5) cutS.y -= 4096.0;
-    if (cutS.z > ubuf.widthPx - 0.5) cutS.z += 4096.0;
-    if (cutS.w > ubuf.heightPx - 0.5) cutS.w += 4096.0;
     float fw = max(fwidth(d), 1e-4);
+    bool niri = ubuf.shadowModel.x > 0.5;
     // Most of the screen is the cutout interior, far from any edge: skip the shadow pass (a second sceneDist) there.
     // niri stops its shadow at 3 sigma
-    float reach = ubuf.shadowParam.x * 3.0 + ubuf.shadowParam.y + length(ubuf.shadowParam.zw) + fw;
+    float reach = (niri ? ubuf.shadowParam.x * 3.0 + ubuf.shadowParam.y + length(ubuf.shadowParam.zw)
+                        : max(ubuf.shadowParam.x + ubuf.shadowParam.y + length(ubuf.shadowParam.zw), ubuf.ambientParam.x + ubuf.ambientParam.y)) + fw;
     if (d > reach) {
         fragColor = vec4(0.0);
         return;
     }
     float cov = 1.0 - smoothstep(-fw, fw, d);
-    // the surface's own alpha (an untinted frame is 0: its body is niri's blur) scales the surface only, never its shadow
-    vec4 col = vec4(ubuf.surfaceColor.rgb, 1.0) * (cov * ubuf.surfaceColor.a);
-    if (ubuf.shadowColor.a > 0.0) {
-        // niri's model: the shape grown by spread, moved by offset, blurred by a gaussian of sigma. across a straight edge
-        // that is a * 0.5 * (1 - erf(d / (sigma * sqrt(2)))); the corners follow the signed distance, not niri's
-        // rounded-box integral
-        float dk = sceneDist(px - ubuf.shadowParam.zw, cutS) - ubuf.shadowParam.y;
-        float sigma = max(ubuf.shadowParam.x, 0.1);
-        float covK = 0.5 * (1.0 - erf1(dk / (sigma * 1.41421356)));
-        col += vec4(ubuf.shadowColor.rgb, 1.0) * (covK * ubuf.shadowColor.a * (1.0 - cov));   // outside the shape only, so never inside its blur
+    if (niri) {
+        // a screen edge with no bar or panel on it (frameOnDemand) has no frame there: it must not cast a shadow inward
+        vec4 cutS = ubuf.cutout;
+        if (cutS.x < 0.5) cutS.x -= 4096.0;
+        if (cutS.y < 0.5) cutS.y -= 4096.0;
+        if (cutS.z > ubuf.widthPx - 0.5) cutS.z += 4096.0;
+        if (cutS.w > ubuf.heightPx - 0.5) cutS.w += 4096.0;
+        // the surface's own alpha (an untinted frame is 0: its body is niri's blur) scales the surface only, never its shadow
+        vec4 col = vec4(ubuf.surfaceColor.rgb, 1.0) * (cov * ubuf.surfaceColor.a);
+        if (ubuf.shadowColor.a > 0.0) {
+            // the shape grown by spread, moved by offset, blurred by a gaussian of sigma. across a straight edge that is
+            // a * 0.5 * (1 - erf(d / (sigma * sqrt(2)))); the corners follow the signed distance, not niri's rounded-box
+            // integral
+            float dk = sceneDist(px - ubuf.shadowParam.zw, cutS) - ubuf.shadowParam.y;
+            float sigma = max(ubuf.shadowParam.x, 0.1);
+            float covK = 0.5 * (1.0 - erf1(dk / (sigma * 1.41421356)));
+            col += vec4(ubuf.shadowColor.rgb, 1.0) * (covK * ubuf.shadowColor.a * (1.0 - cov));   // outside the shape only, so never inside its blur
+        }
+        fragColor = col * ubuf.qt_Opacity;
+        return;
     }
-    fragColor = col * ubuf.qt_Opacity;
+    vec4 col = vec4(ubuf.surfaceColor.rgb, 1.0) * cov;
+    if (ubuf.shadowColor.a > 0.0) {
+        float dk = sceneDist(px - ubuf.shadowParam.zw, ubuf.cutout) - ubuf.shadowParam.y;
+        float bk = max(ubuf.shadowParam.x, fw);
+        float covK = 1.0 - smoothstep(-bk, bk, dk);
+        float ba = max(ubuf.ambientParam.x, fw);
+        float covA = 1.0 - smoothstep(-ba, ba, d - ubuf.ambientParam.y);
+        float sh = 1.0 - (1.0 - covK * ubuf.shadowColor.a) * (1.0 - covA * ubuf.ambientParam.z);
+        col += vec4(ubuf.shadowColor.rgb, 1.0) * (sh * (1.0 - col.a));
+    }
+    fragColor = col * (ubuf.surfaceColor.a * ubuf.qt_Opacity);
 }
