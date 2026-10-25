@@ -201,6 +201,7 @@ Singleton {
         return {
             "name": name,
             "primary": getMatugenColorForMode(colorMode, "primary", "#42a5f5"),
+            "sourceColor": getMatugenColorForMode(colorMode, "source_color", ""),
             "inversePrimary": getMatugenColorForMode(colorMode, "inverse_primary", getMatugenColorForMode(colorMode === "light" ? "dark" : "light", "primary", "#6750a4")),
             "primaryText": getMatugenColorForMode(colorMode, "on_primary", "#ffffff"),
             "primaryContainer": getMatugenColorForMode(colorMode, "primary_container", "#1976d2"),
@@ -353,7 +354,12 @@ Singleton {
     readonly property color textPrimary: surfaceText
     readonly property color textSecondary: withAlpha(surfaceText, levelSecondaryAlpha)
     readonly property color textTertiary: withAlpha(surfaceText, levelTertiaryAlpha)
-    readonly property color paletteKey: currentThemeData.primary
+    // the hue the palette was made from (matugen's source colour), before the flat mapping
+    readonly property color paletteKey: currentThemeData.sourceColor || currentThemeData.primary
+    readonly property color palettePrimary: currentThemeData.primary
+    readonly property var alertColors: Accents.alerts(paletteKey, isLightMode, typeof SettingsData === "undefined" ? "wallpaper" : SettingsData.alertHueSource)
+    readonly property color alert: alertColors.alert
+    readonly property color alertSoft: alertColors.soft
 
     property color primary: flatComponents ? currentThemeData.surfaceText : currentThemeData.primary
     property color primaryText: flatComponents ? Contrast.readableOn(primary, [surface, contrastDark, contrastLight]) : currentThemeData.primaryText
@@ -389,7 +395,7 @@ Singleton {
     readonly property color selectedContainer: (!flatComponents && currentThemeData.selectedContainer) || (themedSelectedContainer ? secondaryContainer : Contrast.subtleTint(surfaceContainerHigh, primary, surfaceText, selectedContainerTint))
     readonly property color accentOnSelectedContainer: (!flatComponents && currentThemeData.accentOnSelectedContainer) || (Contrast.ratio(primary, selectedContainer) >= 3 ? primary : onSelectedContainer)
     readonly property color accentOnPrimaryContainer: (!flatComponents && currentThemeData.accentOnPrimaryContainer) || (Contrast.ratio(primary, primaryContainer) >= 3 ? primary : onPrimaryContainer)
-    readonly property var accents: Accents.derive(paletteKey, isLightMode, currentThemeData.accents ?? null)
+    readonly property var accents: Accents.derive(palettePrimary, isLightMode, currentThemeData.accents ?? null)
     property color inversePrimary: currentThemeData.inversePrimary || wallpaperThemeData(!isLightMode).primary
     property color inverseSurface: currentThemeData.inverseSurface || surfaceText
     property color inverseOnSurface: currentThemeData.inverseOnSurface || surface
@@ -417,12 +423,12 @@ Singleton {
         Binding {
             target: root
             property: "onError"
-            value: root.currentThemeData.errorText || root.getMatugenColor("on_error", root.surface)
+            value: (!root.flatComponents && root.currentThemeData.errorText) || (root.flatComponents ? Contrast.readableOn(root.error, root.onContainerCandidates) : root.getMatugenColor("on_error", root.surface))
         },
         Binding {
             target: root
             property: "onErrorContainer"
-            value: root.currentThemeData.errorContainerText || root.getMatugenColor("on_error_container", root.blend(root.surfaceText, root.error, 0.5))
+            value: (!root.flatComponents && root.currentThemeData.errorContainerText) || (root.flatComponents ? Contrast.readableOn(root.errorContainer, root.onContainerCandidates) : root.getMatugenColor("on_error_container", root.blend(root.surfaceText, root.error, 0.5)))
         },
         Binding {
             target: root
@@ -470,13 +476,14 @@ Singleton {
     readonly property var onContainerCandidates: [surfaceText, surface, contrastLight, contrastDark]
     readonly property real tonalTintAlpha: 0.16
 
-    property color error: currentThemeData.error || "#F2B8B5"
-    property color errorContainer: currentThemeData.errorContainer || getMatugenColor("error_container", blend(surfaceContainerHigh, error, 0.35))
-    property color warning: currentThemeData.warning || "#FF9800"
-    property color info: currentThemeData.info || "#2196F3"
-    property color tempWarning: "#ff9933"
-    property color tempDanger: "#ff5555"
-    property color success: currentThemeData.success || "#4CAF50"
+    // flat: colour only for alerts, from the wallpaper (alert); information and success are plain text
+    property color error: flatComponents ? alert : (currentThemeData.error || "#F2B8B5")
+    property color errorContainer: flatComponents ? blend(surfaceContainerHigh, error, 0.35) : (currentThemeData.errorContainer || getMatugenColor("error_container", blend(surfaceContainerHigh, error, 0.35)))
+    property color warning: flatComponents ? alertSoft : (currentThemeData.warning || "#FF9800")
+    property color info: flatComponents ? surfaceText : (currentThemeData.info || "#2196F3")
+    property color tempWarning: flatComponents ? alertSoft : "#ff9933"
+    property color tempDanger: flatComponents ? alert : "#ff5555"
+    property color success: flatComponents ? surfaceText : (currentThemeData.success || "#4CAF50")
 
     property color primaryHover: withAlpha(primary, 0.12)
     property color primaryHoverLight: withAlpha(primary, transparentBlurLayers ? 0.12 : 0.08)

@@ -688,6 +688,8 @@ Singleton {
     // flat: three text levels, pills, hover by contrast, flat components, concentric corners and colour only for
     // alerts, together. material: material 3 expressive
     property string componentStyle: Spec.SPEC.componentStyle.def
+    // flat alerts: wallpaper (the palette key hue, muted) or harmonised (red and orange bent toward it). no ui: an a/b
+    property string alertHueSource: Spec.SPEC.alertHueSource.def
     property int textRenderType: SettingsData.TextRenderType.Qt
     property int textRenderQuality: SettingsData.TextRenderQuality.Default
 

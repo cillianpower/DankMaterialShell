@@ -1039,6 +1039,9 @@ var LOCAL_SPEC = {
     componentStyle: {
         def: "material"
     },
+    alertHueSource: {
+        def: "wallpaper"
+    },
     notificationSummaryFontSize: {
         def: 0
     },

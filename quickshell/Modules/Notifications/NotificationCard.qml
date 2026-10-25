@@ -133,7 +133,7 @@ Rectangle {
         width: Theme.outlineWidthFocused
         height: parent.height - NotificationMetrics.cardPadding * 2
         radius: Theme.fullRadius(width, height)
-        color: Theme.primary
+        color: Theme.flatComponents ? Theme.error : Theme.primary
         opacity: root.contentOpacity
         visible: root.notificationData?.urgency === NotificationUrgency.Critical
     }
