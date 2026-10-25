@@ -7,8 +7,7 @@ var VALID_KINDS = {
     "dock": true,
     "notification": true,
     "island": true,
-    "slideout": true,
-    "osd": true
+    "slideout": true
 };
 
 var VALID_PHASES = {

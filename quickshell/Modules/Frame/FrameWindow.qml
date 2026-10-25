@@ -307,23 +307,6 @@ PanelWindow {
             radii: SurfaceGeometry.connectorRadii(descriptor, body, win._ccr, win._surfaceRadius, win._dpr, true)
         };
     }
-    readonly property var _osdSurface: {
-        win._surfaceRevision;
-        const descriptor = ConnectedModeState.surfaceDescriptor(win._screenName, "osd");
-        if (!win._connectedActive || !descriptor.visible)
-            return null;
-        const body = SurfaceGeometry.animatedBodyRect(descriptor, win._dpr);
-        if (body.width < 1 || body.height < 1)
-            return null;
-        const radius = Math.max(0, Math.min(win._surfaceRadius, body.width / 2, body.height / 2));
-        const thickness = SurfaceGeometry.isVertical(descriptor.barSide) ? body.width : body.height;
-        return {
-            descriptor: descriptor,
-            body: body,
-            radius: radius,
-            connector: Math.max(0, Math.min(win._ccr, radius, thickness - radius - win._seamOverlap))
-        };
-    }
     readonly property var _modalDescriptor: {
         win._surfaceRevision;
         return ConnectedModeState.surfaceDescriptor(win._screenName, "modal");
@@ -713,10 +696,6 @@ PanelWindow {
         DockBlurRegion {
             dockSurface: win._islandSurface
         }
-        DockBlurRegion {
-            // an untinted osd blurs itself, on its own window
-            dockSurface: Theme.connectedBodiesBlurThemselves ? null : win._osdSurface
-        }
 
         Region {
             id: _notifBodySceneBlurAnchor
@@ -995,20 +974,6 @@ PanelWindow {
                     "farStartCr": win._effectiveNotifFarStartCcr,
                     "farEndCr": win._effectiveNotifFarEndCcr,
                     "surfaceRadius": win._surfaceRadius
-                }
-            });
-        const osd = win._osdSurface;
-        if (osd)
-            arr.push({
-                "side": osd.descriptor.barSide,
-                "body": osd.body,
-                "radii": {
-                    "farCr": osd.connector,
-                    "startCr": osd.connector,
-                    "endCr": osd.connector,
-                    "farStartCr": 0,
-                    "farEndCr": 0,
-                    "surfaceRadius": osd.radius
                 }
             });
         for (const surface of win._dockSurfaces) {
