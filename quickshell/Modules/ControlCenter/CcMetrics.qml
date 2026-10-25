@@ -125,7 +125,7 @@ Singleton {
     readonly property color tileActiveColor: Theme.ccTileActiveBg
     readonly property color tileActiveContent: Theme.ccTileActiveText
     readonly property color tileInactiveColor: Theme.ccPillInactiveBg
-    readonly property color iconBoxInactiveColor: Theme.ccIconBoxInactiveBg
+    readonly property color iconBoxInactiveColor: Theme.flatComponents ? "transparent" : Theme.ccIconBoxInactiveBg
     // flat: an inactive tile is the secondary level; active is primary, with a filled glyph
     readonly property color tileInactiveContent: Theme.flatComponents ? Theme.textSecondary : Theme.surfaceText
     readonly property color tileInactiveSubtitle: Theme.surfaceVariantText

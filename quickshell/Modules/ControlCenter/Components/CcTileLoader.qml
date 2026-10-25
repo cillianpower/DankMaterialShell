@@ -1,4 +1,5 @@
 import QtQuick
+import qs.Common
 import "../utils/widgets.js" as WidgetUtils
 
 Loader {
@@ -11,7 +12,8 @@ Loader {
     property real rows: 1
     property bool compact: false
     property bool small: false
-    property bool bare: false
+    // flat: tiles without a body, their state in the glyph
+    property bool bare: Theme.flatComponents
 
     sourceComponent: grid.model ? grid.model.componentForWidget(widgetData) : null
 

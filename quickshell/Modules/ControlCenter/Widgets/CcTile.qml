@@ -87,6 +87,8 @@ Item {
     readonly property color idleContentColor: {
         if (!available)
             return Theme.onSurface_38;
+        if (bare && Theme.flatComponents && showsActive)
+            return Theme.textPrimary;
         return bodyActive ? CcMetrics.tileActiveContent : CcMetrics.tileInactiveContent;
     }
     readonly property color idleSubtitleColor: {
@@ -97,7 +99,7 @@ Item {
     readonly property color idleIconColor: {
         if (!available)
             return Theme.onSurface_38;
-        if (hasIconBox)
+        if (hasIconBox && !Theme.flatComponents)
             return showsActive ? CcMetrics.tileActiveContent : CcMetrics.tileInactiveContent;
         // Without a body, toggles show their state in the icon tint alone.
         if (bare && showsActive)
@@ -127,7 +129,7 @@ Item {
     readonly property color iconBoxColor: {
         if (!available)
             return Theme.onSurface_12;
-        return showsActive ? CcMetrics.tileActiveColor : CcMetrics.iconBoxInactiveColor;
+        return showsActive && !Theme.flatComponents ? CcMetrics.tileActiveColor : CcMetrics.iconBoxInactiveColor;
     }
 
     property real bodyRadius: bodyLayer.pressed && !Theme.flatComponents ? Math.min(Theme.cornerRadiusM, width / 2, bodyHeight / 2) : restRadius

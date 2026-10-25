@@ -236,7 +236,7 @@ Item {
                         savedIndex: member.modelData.index
                         compact: true
                         small: true
-                        bare: root.membersBare
+                        bare: root.membersBare || Theme.flatComponents
                     }
 
                     DragHandler {
