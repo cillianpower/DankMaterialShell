@@ -431,7 +431,7 @@ QtObject {
     function sheetRadii() {
         if (root.freeMode)
             return [root.cornerRadius, root.cornerRadius, root.cornerRadius, root.cornerRadius];
-        return Resolver.islandSheetRadii(root.edge, root.embedded || root.notch ? 0 : root.edgeCornerRadius, root.cornerRadius, root.flushEnd);
+        return Resolver.islandFlushRadii(root.edgeRadii(root.embedded || root.notch ? 0 : root.edgeCornerRadius, root.cornerRadius), root.edge, root.flushEnd);
     }
 
     // [topLeft, topRight, bottomLeft, bottomRight] with `near` on the corners touching the edge.

@@ -78,31 +78,14 @@ function islandAlongMargins(flushEnd, margin) {
     return { "start": flushEnd === "start" ? 0 : margin, "end": flushEnd === "end" ? 0 : margin };
 }
 
-// A sheet's corners [topLeft, topRight, bottomLeft, bottomRight] on a bar edge: `near` where it meets the bar, `far`
-// away from it, and square where it meets the screen's side at a tethered end.
-function islandSheetRadii(edge, near, far, flushEnd) {
-    let radii;
-    switch (edge) {
-    case "bottom":
-        radii = [far, far, near, near];
-        break;
-    case "left":
-        radii = [near, far, near, far];
-        break;
-    case "right":
-        radii = [far, near, far, near];
-        break;
-    default:
-        radii = [near, near, far, far];
-    }
+// A sheet's corners [topLeft, topRight, bottomLeft, bottomRight], square where it meets the screen's side at a
+// tethered end: its right side on a horizontal bar, its bottom on a vertical one.
+function islandFlushRadii(radii, edge, flushEnd) {
     if (!flushEnd)
         return radii;
     const vertical = edge === "left" || edge === "right";
-    // the corners along the tethered end: its right side on a horizontal bar, its bottom on a vertical one
     const corners = vertical ? (flushEnd === "end" ? [2, 3] : [0, 1]) : (flushEnd === "end" ? [1, 3] : [0, 2]);
-    for (const i of corners)
-        radii[i] = 0;
-    return radii;
+    return radii.map((radius, i) => corners.indexOf(i) >= 0 ? 0 : radius);
 }
 
 // An untinted frame keeps its blur a pixel inside the bar's edge, so the blur can't spill over the windows below; with

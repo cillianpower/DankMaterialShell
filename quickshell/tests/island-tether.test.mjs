@@ -26,11 +26,11 @@ test("a tethered sheet has no clearance at that end, and is square where it meet
     assert.deepEqual(plain(resolver.islandAlongMargins("end", 8)), { start: 8, end: 0 });
     assert.deepEqual(plain(resolver.islandAlongMargins("", 8)), { start: 8, end: 8 });
     // a top bar: corners meeting the bar square (near 0), far ones round, the right-hand ones square at the screen edge
-    assert.deepEqual(plain(resolver.islandSheetRadii("top", 0, 12, "")), [0, 0, 12, 12]);
-    assert.deepEqual(plain(resolver.islandSheetRadii("top", 0, 12, "end")), [0, 0, 12, 0]);
-    assert.deepEqual(plain(resolver.islandSheetRadii("top", 0, 12, "start")), [0, 0, 0, 12]);
+    assert.deepEqual(plain(resolver.islandFlushRadii([0, 0, 12, 12], "top", "")), [0, 0, 12, 12]);
+    assert.deepEqual(plain(resolver.islandFlushRadii([0, 0, 12, 12], "top", "end")), [0, 0, 12, 0]);
+    assert.deepEqual(plain(resolver.islandFlushRadii([0, 0, 12, 12], "top", "start")), [0, 0, 0, 12]);
     // a right-hand vertical bar tethered at its bottom end
-    assert.deepEqual(plain(resolver.islandSheetRadii("right", 0, 12, "end")), [12, 0, 0, 0]);
+    assert.deepEqual(plain(resolver.islandFlushRadii([12, 0, 12, 0], "right", "end")), [12, 0, 0, 0]);
 });
 
 test("an untinted frame pulls its blur in a pixel only when the bar's edge falls between device pixels", () => {
