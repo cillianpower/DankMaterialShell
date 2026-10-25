@@ -29,7 +29,8 @@ BasePill {
         }
     }
     property real allottedPrimarySize: 0
-    property int availableWidth: allottedPrimarySize > 0 ? allottedPrimarySize : maxWidth
+    // real, as the bar allots it: a whole-pixel width cuts up to a pixel off a title on a fractional-scale grid
+    property real availableWidth: allottedPrimarySize > 0 ? allottedPrimarySize : maxWidth
     // rounded up, not to the nearest pixel: a title half a pixel short of its width is elided
     readonly property real naturalPrimarySize: isVerticalOrientation ? height : !hasWindowsOnCurrentWorkspace ? 0 : Math.ceil((Math.min(contentItem?.naturalWidth ?? 0, maxWidth - horizontalPadding * 2) + horizontalPadding * 2) * dpr) / dpr
     readonly property real minimumPrimarySize: isVerticalOrientation ? height : Math.min(naturalPrimarySize, Theme.snap((contentItem?.minimumWidth ?? 0) + horizontalPadding * 2, dpr))
