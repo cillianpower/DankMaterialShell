@@ -13,12 +13,6 @@ const eq = { id: "eq", icon: "equalizer", controlCenterPage: { parent: "audioOut
 const stray = [{ id: "plain" }, { id: "bad", controlCenterPage: { parent: "network" } }, { id: "loose", controlCenterPage: "brightness" }];
 const plugins = [benq, focusrite, eq, ...stray];
 
-test("the volume rows' chevrons open the audio pages; other rows keep their own", () => {
-    assert.equal(pages.sliderSection("volumeSlider"), "audioOutput");
-    assert.equal(pages.sliderSection("inputVolumeSlider"), "audioInput");
-    assert.equal(pages.sliderSection("brightnessSlider"), "");
-});
-
 test("a device's own page sits under it when the plugin's pattern names it", () => {
     assert.deepEqual(plain(pages.pagesUnder(plugins, "brightness", "ddc:i2c-5 BenQ RD280UG")), [
         { section: "plugin_benq-ddc-dms", pluginId: "benq-ddc-dms", title: "Picture", icon: "monitor" }

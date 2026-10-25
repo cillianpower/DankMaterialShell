@@ -1,7 +1,6 @@
 import QtQuick
 import qs.Common
 import qs.Services
-import "../../../Common/CcPages.js" as CcPages
 
 CcSliderRow {
     id: root
@@ -26,8 +25,8 @@ CcSliderRow {
     sliderLabel: isInput ? I18n.tr("Input Volume") : I18n.tr("Volume")
     iconLabel: audio?.muted ? I18n.tr("Unmute") : I18n.tr("Mute")
     sliderEnabled: audio !== null
-    // in the grid, the chevron opens the audio page (the row on that page has none)
-    hasPage: CcPages.sliderSection(widgetData?.id ?? "") !== ""
+    // in the grid, the chevron opens the audio page (Sections.sectionFor); the row on that page has none
+    hasPage: ["volumeSlider", "inputVolumeSlider"].includes(widgetData?.id ?? "")
     minimum: 0
     maximum: maxVolume
     valueOverride: volumePercent

@@ -1,7 +1,7 @@
 .pragma library
 
-// The control centre's depth: which page a row's chevron opens, which plugin pages sit under a built-in page (a
-// device's own controls, such as a monitor's picture modes over ddc), and which page is one layer up from a page.
+// The control centre's depth: which plugin pages sit under a built-in page (a device's own controls, such as a
+// monitor's picture modes over ddc), and which page is one layer up from a page.
 //
 // A plugin puts its page under a built-in one from its plugin.json, and draws it with its ccDetailContent:
 //   "controlCenterPage": { "parent": "brightness" | "audioOutput" | "audioInput",
@@ -9,17 +9,6 @@
 //                          "title": "Picture" }          // the row's title; the device's own name when left out
 
 const PARENTS = ["brightness", "audioOutput", "audioInput"];
-
-// The page a slider row's chevron opens.
-function sliderSection(widgetId) {
-    switch (widgetId) {
-    case "volumeSlider":
-        return "audioOutput";
-    case "inputVolumeSlider":
-        return "audioInput";
-    }
-    return "";
-}
 
 function pageSpec(plugin) {
     const spec = plugin?.controlCenterPage;
