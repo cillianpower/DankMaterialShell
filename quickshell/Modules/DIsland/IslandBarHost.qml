@@ -409,9 +409,10 @@ Item {
         id: controller
 
         onKeyboardDismissRequestedChanged: root.requestKeyboardFocus()
-        // a page changed while open (the menu bar face): its face takes the keyboard, or escape and its keys go nowhere
+        // a page changed while open (the menu bar face, its page keys): its face takes the keyboard, or escape and its
+        // keys go nowhere
         onActiveActivityChanged: {
-            if (menuBarFace && expanded && keyboardDismissRequested)
+            if ((menuBarFace || pageKeys) && expanded && keyboardDismissRequested)
                 root.requestKeyboardFocus();
         }
         onLauncherSessionActiveChanged: {
@@ -431,6 +432,7 @@ Item {
         notch: root.notch
         flushEnd: root.flushEnd
         menuBarFace: root.setting("islandMenuBarFace")
+        pageKeys: root.setting("islandPageKeys")
         clockTimeHost: clockTime.enabled ? clockTime : null
         motionRunning: root.motionRunning
         dotSize: root.dotSize * root.freeScale

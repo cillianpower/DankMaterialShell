@@ -28,10 +28,10 @@ FocusScope {
     }
 
     // a click on another of the face's groups while the control centre is open (the menu bar face stays:
-    // IslandController.homeFacePinned) opens its section here
+    // IslandController.homeFacePinned), or a page key onto another of its pages, opens its section here
     Connections {
         target: root.controller
-        enabled: root.controller.menuBarFace
+        enabled: root.controller.menuBarFace || root.controller.pageKeys
         function onControlCenterPendingSectionChanged() {
             if (root.controller.expanded && root.controller.activeActivity === "controlcenter")
                 hostContract.expandedSection = root.controller.controlCenterPendingSection || "";

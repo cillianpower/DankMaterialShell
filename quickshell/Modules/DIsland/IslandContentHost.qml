@@ -73,18 +73,18 @@ Item {
     property bool homeExpandedTouched: false
 
     Keys.onEscapePressed: root.controller.requestCollapse()
-    // agartha: the island's pages in turn, from anywhere in it (a page keeps the plain arrows: the calendar's days, a
-    // slider; a text field keeps Ctrl+arrows for its words)
+    // islandPageKeys: the island's pages in turn, from anywhere in it (a page keeps the plain arrows: the calendar's
+    // days, a slider; a text field keeps Ctrl+arrows for its words)
     Shortcut {
         sequences: ["Ctrl+Right", "Ctrl+Tab"]
         context: Qt.WindowShortcut
-        enabled: root.controller.expanded
+        enabled: root.controller.pageKeys && root.controller.expanded
         onActivated: root.controller.cycleActivity(1, true)
     }
     Shortcut {
         sequences: ["Ctrl+Left"]
         context: Qt.WindowShortcut
-        enabled: root.controller.expanded
+        enabled: root.controller.pageKeys && root.controller.expanded
         onActivated: root.controller.cycleActivity(-1, true)
     }
 

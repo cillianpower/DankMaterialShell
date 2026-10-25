@@ -55,6 +55,8 @@ QtObject {
     // stays while its menu is open: the face is the page indicator, the open page's group lit, and a click on another
     // group switches
     property bool menuBarFace: false
+    // islandPageKeys: a bar's island walks the pages its face's groups open (cycleActivity)
+    property bool pageKeys: false
     readonly property bool homeFacePinned: menuBarFace && embedded && !freeMode && !transientActive && (expanded || closingToFace)
     // a page closing back onto the face: the face stays put through the motion rather than fading back in
     readonly property bool closingToFace: !expanded && motionRunning && (activeActivity === "home" || isDestination(activeActivity))
@@ -857,9 +859,9 @@ QtObject {
     }
 
     function cycleActivity(direction, shouldExpand) {
-        // agartha: a bar's island walks the pages its face's groups open, in the face's order (Ctrl+Left and
+        // islandPageKeys: a bar's island walks the pages its face's groups open, in the face's order (Ctrl+Left and
         // Ctrl+Right, Ctrl+Tab; the island's other pages are reached by mouse)
-        const pages = root.embedded ? IslandPages.facePages(root.homeFaceGroups, root.mediaAvailable) : [];
+        const pages = root.pageKeys && root.embedded ? IslandPages.facePages(root.homeFaceGroups, root.mediaAvailable) : [];
         if (pages.length) {
             const next = IslandPages.stepPage(pages, {
                 "activity": activeActivity,

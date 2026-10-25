@@ -45,6 +45,8 @@ var ISLAND_DEFAULTS = {
     islandMenuBarFace: false,
     // an island at its section's outer end grows its sheet out of that end of the bar, flush with the screen's edge
     islandTether: false,
+    // Ctrl+Left and Ctrl+Right (and Ctrl+Tab) walk the pages a bar's island face opens, in the face's order
+    islandPageKeys: false,
     islandHomeClockDisplay: "both",
     islandHomeVolumeDisplay: "both",
     islandHomeBrightnessDisplay: "both",
