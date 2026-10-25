@@ -33,6 +33,12 @@ Item {
     readonly property int brightnessPercent: root.brightnessMaximum > 0 ? Math.round(BrightnessService.brightnessLevel / root.brightnessMaximum * 100) : 0
     readonly property int volumePercent: AudioService.sinkVolumePercent
     readonly property var groupIds: root.groupsForSide("left").concat(["clock"]).concat(root.groupsForSide("right"))
+    // every group the face can show, shown or not, so one appearing or leaving can move instead of the row rebuilding
+    readonly property var slotIds: root.controller.homeLeftGroups.concat(["clock"]).concat(root.controller.homeRightGroups)
+    // groups opening, closing or resizing: the ticking time stays on the face while they move
+    property int movingSlots: 0
+    // a slot destroyed mid-move never reports its end
+    onSlotIdsChanged: root.movingSlots = 0
 
     // the face's groups as shown, for the menu bar face and its page keys (IslandController)
     Binding {
@@ -416,7 +422,7 @@ Item {
         // face holds still: at rest, and pinned while a page opens, shows and closes. while it moves or gives way to
         // something else, the frame redraws anyway
         timeHost: root.controller.clockTimeHost
-        detachWanted: !root.controller.transientActive && (root.controller.homeFacePinned || root.controller.activeActivity === "home" && !root.controller.expanded && !root.controller.motionRunning)
+        detachWanted: root.movingSlots === 0 && !root.controller.transientActive && (root.controller.homeFacePinned || root.controller.activeActivity === "home" && !root.controller.expanded && !root.controller.motionRunning)
     }
 
     component ConnectivityIcon: Item {
@@ -428,8 +434,14 @@ Item {
 
         width: root.iconSize
         height: root.iconSize
-        visible: root.controller.homeStatusContent !== "notable" || root.connectivityNotable(connectivityIcon.type)
-        opacity: root.connectivityIconOpacity(connectivityIcon.type)
+        readonly property bool shown: root.controller.homeStatusContent !== "notable" || root.connectivityNotable(connectivityIcon.type)
+        visible: connectivityIcon.shown || opacity > 0
+        opacity: connectivityIcon.shown ? root.connectivityIconOpacity(connectivityIcon.type) : 0
+
+        Behavior on opacity {
+            enabled: Anims.smoothMotion
+            FaceFade {}
+        }
 
         DIcon {
             id: connectivityGlyph
@@ -438,6 +450,11 @@ Item {
             name: root.connectivityIconName(connectivityIcon.type)
             size: root.statusIconSize
             color: Theme.stateContent(root.connectivityIconColor(connectivityIcon.type), connectivityIcon.raised, connectivityIcon.held)
+
+            Behavior on color {
+                enabled: Anims.smoothMotion
+                FaceColor {}
+            }
 
             DBlink {
                 target: connectivityGlyph
@@ -449,10 +466,29 @@ Item {
     component PrivacyIcon: DIcon {
         required property bool active
 
-        visible: active
+        opacity: active ? 1 : 0
+        visible: opacity > 0
         size: root.statusIconSize
         color: Theme.error
         filled: true
+
+        Behavior on opacity {
+            enabled: Anims.smoothMotion
+            FaceFade {}
+        }
+    }
+
+    // smooth motion: the face's glyphs fade and recolour on the fast spring's curve instead of snapping
+    component FaceFade: NumberAnimation {
+        duration: Theme.expressiveDurations.expressiveFastEffects
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Theme.expressiveCurves.expressiveFastEffects
+    }
+
+    component FaceColor: ColorAnimation {
+        duration: Theme.expressiveDurations.expressiveFastEffects
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Theme.expressiveCurves.expressiveFastEffects
     }
 
     component GroupHoverArea: IslandSlotHoverArea {
@@ -550,6 +586,17 @@ Item {
         width: group.vertical ? root.width : (group.iconOnly ? root.iconSize : content.implicitWidth)
         height: group.vertical ? content.implicitHeight : root.slotSize
 
+        // smooth motion: a glyph arriving or leaving widens or narrows the group instead of snapping
+        Behavior on width {
+            enabled: Anims.smoothMotion && !group.vertical
+            NumberAnimation {
+                duration: Theme.expressiveDurations.expressiveFastSpatial
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.expressiveCurves.expressiveFastSpatial
+                onRunningChanged: root.movingSlots += running ? 1 : -1
+            }
+        }
+
         GroupHoverArea {
             id: groupArea
 
@@ -585,7 +632,15 @@ Item {
                 visible: active
                 sourceComponent: IslandClock {
                     dateColor: group.lift(Theme.surfaceTextMedium)
+                    Behavior on dateColor {
+                        enabled: Anims.smoothMotion
+                        FaceColor {}
+                    }
                     separatorColor: group.lift(Theme.flatComponents ? Theme.textTertiary : Theme.primary)
+                    Behavior on separatorColor {
+                        enabled: Anims.smoothMotion
+                        FaceColor {}
+                    }
                 }
             }
 
@@ -614,6 +669,10 @@ Item {
                 name: "search"
                 size: root.iconSize
                 color: group.lift(Theme.surfaceTextMedium)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
             }
 
             DIcon {
@@ -621,12 +680,20 @@ Item {
                 name: WeatherService.getWeatherIcon(WeatherService.weather.wCode)
                 size: root.statusIconSize
                 color: group.lift(Theme.surfaceTextSecondary)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
             }
 
             StyledText {
                 visible: group.isWeather
                 text: WeatherService.currentTempText()
                 color: group.lift(Theme.surfaceTextSecondary)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
                 font.pixelSize: root.textSize
             }
 
@@ -635,12 +702,20 @@ Item {
                 name: "notifications"
                 size: root.statusIconSize
                 color: group.lift(Theme.flatComponents ? Theme.textSecondary : Theme.secondary)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
             }
 
             StyledText {
                 visible: group.isNotifications
                 text: root.controller.unreadNotificationCount
                 color: group.lift(Theme.surfaceTextSecondary)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
                 font.pixelSize: root.textSize
             }
 
@@ -649,6 +724,10 @@ Item {
                 name: group.isVolume ? AudioService.sinkVolumeIconName : BrightnessService.brightnessIconName(root.brightnessDevice, BrightnessService.brightnessLevel)
                 size: root.statusIconSize
                 color: group.lift(Theme.surfaceTextSecondary)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
             }
 
             NumericText {
@@ -656,6 +735,10 @@ Item {
                 text: group.vertical ? group.levelPercent : group.levelPercent + "%"
                 reserveText: group.vertical ? group.levelReserve : group.levelReserve + "%"
                 color: group.lift(Theme.surfaceTextSecondary)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
                 font.pixelSize: root.textSize
             }
 
@@ -713,6 +796,10 @@ Item {
                 name: "tune"
                 size: root.iconSize
                 color: group.lift(Theme.flatComponents ? Theme.textSecondary : Theme.surfaceText)
+                Behavior on color {
+                    enabled: Anims.smoothMotion
+                    FaceColor {}
+                }
             }
 
             Repeater {
@@ -944,6 +1031,10 @@ Item {
                     }
                     size: root.statusIconSize
                     color: Theme.stateContent(Theme.flatComponents ? Theme.textSecondary : Theme.surfaceText, caretRoot.hovered, caretArea.pressed)
+                    Behavior on color {
+                        enabled: Anims.smoothMotion
+                        FaceColor {}
+                    }
                 }
 
                 MouseArea {
@@ -1019,6 +1110,42 @@ Item {
         }
     }
 
+    // a group's slot carries the gap before it, so a group appearing or leaving opens and closes its own room (on the
+    // fast spring's curve with smooth motion; at once otherwise)
+    component GroupSlot: Item {
+        id: slot
+
+        required property var modelData
+        readonly property string slotId: String(modelData)
+        readonly property int shownIndex: root.groupIds.indexOf(slot.slotId)
+        readonly property real gap: slot.shownIndex > 0 ? root.groupSpacing : 0
+        property real progress: slot.shownIndex !== -1 ? 1 : 0
+
+        Behavior on progress {
+            enabled: Anims.smoothMotion
+            NumberAnimation {
+                duration: Theme.expressiveDurations.expressiveFastSpatial
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.expressiveCurves.expressiveFastSpatial
+                onRunningChanged: root.movingSlots += running ? 1 : -1
+            }
+        }
+
+        visible: slot.progress > 0
+        clip: slot.progress < 1
+        width: root.isVertical ? root.width : (homeGroup.width + slot.gap) * slot.progress
+        height: root.isVertical ? (homeGroup.height + slot.gap) * slot.progress : root.slotSize
+
+        HomeGroup {
+            id: homeGroup
+            groupId: slot.slotId
+            slotIndex: slot.shownIndex
+            x: root.isVertical ? 0 : slot.gap * slot.progress
+            y: root.isVertical ? slot.gap * slot.progress : 0
+            opacity: slot.progress
+        }
+    }
+
     Row {
         id: compactRow
 
@@ -1026,17 +1153,11 @@ Item {
         visible: !root.isVertical
         onImplicitWidthChanged: root.pushMeasuredLength()
         height: root.slotSize
-        spacing: root.groupSpacing
 
         Repeater {
-            model: root.isVertical ? [] : root.groupIds
+            model: root.isVertical ? [] : root.slotIds
 
-            HomeGroup {
-                required property var modelData
-                required property int index
-                groupId: String(modelData)
-                slotIndex: index
-            }
+            GroupSlot {}
         }
     }
 
@@ -1047,17 +1168,11 @@ Item {
         visible: root.isVertical
         onImplicitHeightChanged: root.pushMeasuredLength()
         width: root.width
-        spacing: root.groupSpacing
 
         Repeater {
-            model: root.isVertical ? root.groupIds : []
+            model: root.isVertical ? root.slotIds : []
 
-            HomeGroup {
-                required property var modelData
-                required property int index
-                groupId: String(modelData)
-                slotIndex: index
-            }
+            GroupSlot {}
         }
     }
 }
