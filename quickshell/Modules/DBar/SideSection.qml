@@ -11,6 +11,7 @@ BarSection {
     property real contentSize: 0
     property real contentThickness: 0
     onLayoutRequested: rolesTimer.restart()
+    onLayoutDue: updateRoles()
 
     onXChanged: refreshBlur()
     onYChanged: refreshBlur()

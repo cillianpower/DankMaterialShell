@@ -32,19 +32,25 @@ function expanderIcon(edge, open) {
 function section(entries, hidden, spacing, triggerSize, triggerIndex) {
     const sizes = [];
     const indices = [];
+    const presences = [];
     const hasOverflow = hidden.some(index => entries[index]?.size > 0);
     const insertion = Math.max(0, Math.min(entries.length, triggerIndex));
     for (let index = 0; index <= entries.length; index++) {
         if (index === insertion && hasOverflow) {
             sizes.push(triggerSize);
             indices.push(-1);
+            presences.push(1);
         }
         if (index === entries.length)
             break;
-        sizes.push(entries[index]?.size > 0 && !hidden.includes(index) ? entries[index].size : null);
+        const entry = entries[index];
+        // an entry on its way in or out keeps its place while any of it shows
+        const placed = entry?.size > 0 || entry?.presence > 0;
+        sizes.push(placed && !hidden.includes(index) ? entry.size : null);
         indices.push(index);
+        presences.push(entry?.presence ?? 1);
     }
-    const layout = CenterLayout.resolve(sizes, 0, spacing, "geometric");
+    const layout = CenterLayout.resolve(sizes, 0, spacing, "geometric", null, null, presences);
     const positions = entries.map(() => null);
     let buttonPosition = null;
     const start = -layout.totalSize / 2;
@@ -64,6 +70,7 @@ function section(entries, hidden, spacing, triggerSize, triggerIndex) {
     return {
         sizes,
         indices,
+        presences,
         positions,
         buttonPosition,
         totalSize: layout.totalSize,

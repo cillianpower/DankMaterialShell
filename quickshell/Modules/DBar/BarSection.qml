@@ -53,10 +53,14 @@ Item {
     readonly property var inlineEntries: {
         root.entryRevision;
         const entries = [];
-        for (let index = 0; index < (entryRepeater?.count ?? 0); index++)
+        for (let index = 0; index < (entryRepeater?.count ?? 0); index++) {
+            const wrapper = entryRepeater.itemAt(index);
             entries.push({
-                size: entryRepeater.itemAt(index)?.primarySize ?? 0
+                size: wrapper?.primarySize ?? 0,
+                presence: wrapper?.presence ?? 1,
+                moving: wrapper?.moving ?? false
             });
+        }
         return entries;
     }
     readonly property var allottedSizes: barContent?.overflowPlan?.sizes?.[section] ?? []
@@ -101,6 +105,8 @@ Item {
     readonly property var trailingInlineItem: inlineItemAt(inlineOrder.length - 1)
 
     signal layoutRequested
+    // an entry in motion lays out within the frame it moved; the timers run only after that frame is drawn
+    signal layoutDue
 
     Connections {
         target: root.entryRepeater
@@ -113,7 +119,7 @@ Item {
     }
 
     onLayoutEntriesChanged: requestOverflowLayout()
-    onInlineEntriesChanged: layoutRequested()
+    onInlineEntriesChanged: inlineEntries.some(entry => entry.moving) ? layoutDue() : layoutRequested()
     onOverflowIndicesChanged: layoutRequested()
     onOverflowPositionChanged: requestOverflowLayout()
     onOverflowTriggerSizeChanged: requestOverflowLayout()

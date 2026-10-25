@@ -27,7 +27,8 @@ function confine(start, totalSize, bounds) {
     return Math.min(Math.max(start, min), max - totalSize);
 }
 
-function resolve(sizes, length, spacing, mode, bounds, anchor) {
+// presences (0-1, default 1): an entry coming or going opens or closes its gaps with it
+function resolve(sizes, length, spacing, mode, bounds, anchor, presences) {
     const indices = [];
     const offsets = [];
     const positions = sizes.map(() => null);
@@ -36,7 +37,7 @@ function resolve(sizes, length, spacing, mode, bounds, anchor) {
         if (sizes[index] === null)
             continue;
         if (indices.length > 0)
-            totalSize += spacing;
+            totalSize += spacing * Math.min(presences?.[indices[indices.length - 1]] ?? 1, presences?.[index] ?? 1);
         indices.push(index);
         offsets.push(totalSize);
         totalSize += sizes[index];
