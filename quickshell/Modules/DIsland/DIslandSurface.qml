@@ -92,6 +92,38 @@ Item {
         return "transparent";
     }
 
+    // flat style: a critical notification flashes its outline (three soft pulses on the small spring's curve), then
+    // stays lit; outside the flat style, or with reduced motion, it just lights up
+    property real criticalPulse: 1
+    readonly property bool criticalLit: root.controller.notificationActive && root.notificationModel.critical
+    onCriticalLitChanged: {
+        criticalFlash.stop();
+        criticalPulse = 1;
+        if (criticalLit && Theme.flatComponents && !root.reducedMotion)
+            criticalFlash.start();
+    }
+
+    SequentialAnimation {
+        id: criticalFlash
+        loops: 3
+        NumberAnimation {
+            target: root
+            property: "criticalPulse"
+            to: 0.15
+            duration: Anims.smallDuration * 2
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Anims.smoothSpatial
+        }
+        NumberAnimation {
+            target: root
+            property: "criticalPulse"
+            to: 1
+            duration: Anims.smallDuration * 2
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Anims.smoothSpatial
+        }
+    }
+
     signal scrollWheel(var wheel)
 
     readonly property alias inputMaskItem: inputEnvelope
@@ -389,7 +421,7 @@ Item {
         // Embedded, the band already paints the in-band strip; overhangFill draws the rest, so a translucent band never double-alphas.
         color: root.embedded ? "transparent" : root.effectiveSurfaceColor
         border.width: root.notificationAccentColor !== "transparent" ? 1.5 : root.embedded ? 0 : (root.highContrast ? 2 : (root.popupStyled && !root.notch ? BlurService.borderWidth : 0))
-        border.color: root.notificationAccentColor !== "transparent" ? root.notificationAccentColor : (root.highContrast ? Theme.outlineStrong : (root.popupStyled && !root.notch ? BlurService.borderColor : "transparent"))
+        border.color: root.notificationAccentColor !== "transparent" ? Theme.withAlpha(root.notificationAccentColor, root.notificationAccentColor.a * (root.notificationModel.critical ? root.criticalPulse : 1)) : (root.highContrast ? Theme.outlineStrong : (root.popupStyled && !root.notch ? BlurService.borderColor : "transparent"))
 
         Behavior on color {
             ColorAnimation {
@@ -398,7 +430,9 @@ Item {
             }
         }
 
+        // the critical flash drives the outline itself; a colour animation restarting every frame would hide it
         Behavior on border.color {
+            enabled: !criticalFlash.running
             ColorAnimation {
                 duration: root.reducedMotion ? 0 : Theme.shortDuration
                 easing.type: Easing.OutCubic
