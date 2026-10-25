@@ -1200,6 +1200,11 @@ Singleton {
         return override === undefined ? -1 : override;
     }
     readonly property real windowRadius: compositorRadiusOverride >= 0 ? compositorRadiusOverride : cornerRadiusL
+    // multiples of the window radius (niri writes it as geometry-corner-radius), for surfaces sized from the windows
+    readonly property real windowRadiusL: Math.round(windowRadius * 1.5)
+    readonly property real windowRadiusXL: windowRadius * 2
+    // a pill, whatever the corner style: a Rectangle clamps it to half its shorter side; elsewhere clamp it yourself
+    readonly property real windowRadiusFull: 9999
     // frameRounding -1: the frame's corners are the window corners
     readonly property real frameRadius: typeof SettingsData === "undefined" || SettingsData.frameRounding < 0 ? windowRadius : SettingsData.frameRounding
 
