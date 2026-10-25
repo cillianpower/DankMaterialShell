@@ -269,6 +269,7 @@ FocusScope {
 
             DButton {
                 text: I18n.tr("Save")
+                primaryAction: true
                 onClicked: root.saveAppOverride()
             }
         }

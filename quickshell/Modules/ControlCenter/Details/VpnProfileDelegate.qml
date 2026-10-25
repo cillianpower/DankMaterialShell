@@ -190,6 +190,7 @@ CcListRow {
             DButton {
                 text: I18n.tr("Save credentials")
                 buttonHeight: Theme.buttonHeightXS
+                primaryAction: true
                 enabled: passwordField.text.length > 0
                 onClicked: {
                     VPNService.setCredentials(root.profile.uuid, usernameField.text, passwordField.text, true);

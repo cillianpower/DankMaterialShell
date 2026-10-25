@@ -167,6 +167,7 @@ Item {
             iconSize: CcMetrics.iconBoxIconSize
             iconColor: Theme.onPrimary
             backgroundColor: Theme.primary
+            primaryAction: true
             tooltipText: I18n.tr("Finish")
             onClicked: root.finishRequested()
         }
