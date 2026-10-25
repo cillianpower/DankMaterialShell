@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.Common
+import "../Common/PixelGrid.js" as PixelGrid
 
 // clockTimeOverlay: a clock in the frame shares the frame's one full-screen surface, which redraws whole, so a ticking time there
 // redraws the whole screen every second. This draws the time on a small surface of its own, laid exactly over the
@@ -55,18 +56,24 @@ Item {
             id: overlay
 
             readonly property var at: root.placement(root.timeItem)
+            // anchored on a device pixel, the rest as the text's offset: an anchor between pixels is rounded onto the
+            // grid by the compositor, and a time at a fractional place lands a pixel off the clock it stands in for
+            readonly property real dpr: root.parentWindow?.devicePixelRatio ?? 1
+            readonly property int anchorX: PixelGrid.gridFloor(at.x, dpr)
+            readonly property int anchorY: PixelGrid.gridFloor(at.y, dpr)
 
             anchor.window: root.parentWindow
-            anchor.rect.x: Math.floor(at.x)
-            anchor.rect.y: Math.floor(at.y)
+            anchor.rect.x: anchorX
+            anchor.rect.y: anchorY
             anchor.rect.width: 1
             anchor.rect.height: 1
             anchor.edges: Edges.Top | Edges.Left
             anchor.gravity: Edges.Bottom | Edges.Right
             anchor.adjustment: PopupAdjustment.None
             visible: true
-            implicitWidth: Math.max(1, Math.ceil((root.timeItem?.width ?? 0) + 1))
-            implicitHeight: Math.max(1, Math.ceil((root.timeItem?.height ?? 0) + 1))
+            // room for the offset, which stays under a step: a size following it would resize the popup as it moves
+            implicitWidth: Math.max(1, Math.ceil((root.timeItem?.width ?? 0) + PixelGrid.gridStep(dpr)))
+            implicitHeight: Math.max(1, Math.ceil((root.timeItem?.height ?? 0) + PixelGrid.gridStep(dpr)))
             color: "transparent"
             // clicks and hover go through to the clock underneath
             mask: Region {}
@@ -82,8 +89,8 @@ Item {
             NumericText {
                 readonly property var clock: root.clock
                 readonly property bool drawn: !!clock && clock.overlayDraws && overlay.at.visible
-                x: overlay.at.x - Math.floor(overlay.at.x)
-                y: overlay.at.y - Math.floor(overlay.at.y)
+                x: overlay.at.x - overlay.anchorX
+                y: overlay.at.y - overlay.anchorY
                 width: root.timeItem?.width ?? implicitWidth
                 height: root.timeItem?.height ?? implicitHeight
                 text: drawn ? (clock.timeLines[0] ?? "") : ""
