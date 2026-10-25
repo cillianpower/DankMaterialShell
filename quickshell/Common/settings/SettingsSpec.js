@@ -1021,6 +1021,9 @@ var LOCAL_SPEC = {
     frameShadowOnFocus: {
         def: false
     },
+    clockProportionalFigures: {
+        def: false
+    },
     minimalInfo: {
         def: false
     },

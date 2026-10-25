@@ -130,10 +130,10 @@ Item {
                 id: line
 
                 required property int index
-                // in a row (the bar), figures are proportional: tabular ones leave a lone 1 in a digit-wide box
+                // clockProportionalFigures, in a row (the bar): tabular figures leave a lone 1 in a digit-wide box
                 // ("1 1:4 1"). the slot is the time with every digit its widest, and the time sits at its start, so the
                 // hours stay put and only its end moves a pixel as the seconds tick
-                readonly property bool proportional: !root.vertical
+                readonly property bool proportional: !root.vertical && SettingsData.clockProportionalFigures
                 anchors.horizontalCenter: proportional ? undefined : parent.horizontalCenter
                 readonly property string lineText: stack.lines[index]
                 text: stack.detached ? lineText.replace(/\d/g, widestDigit) : lineText

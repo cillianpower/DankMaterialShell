@@ -674,6 +674,8 @@ Singleton {
     property bool frameOnDemand: Spec.SPEC.frameOnDemand.def
     // the frame casts its shadow only while a surface the user summoned is open
     property bool frameShadowOnFocus: Spec.SPEC.frameShadowOnFocus.def
+    // a clock in a row sets its figures proportional, in a slot as wide as its widest reading
+    property bool clockProportionalFigures: Spec.SPEC.clockProportionalFigures.def
     // the minimum information: no embellishment explaining what something is (one plain icon on an osd, one line on a tile)
     property bool minimalInfo: Spec.SPEC.minimalInfo.def
     property int textRenderType: SettingsData.TextRenderType.Qt
