@@ -492,7 +492,7 @@ QtObject {
             "bottomRightRadius": root.dotSize / 2
         })
     readonly property var systemLevelActivities: ["volume", "brightness", "mic"]
-    readonly property var systemStateActivities: ["capslock", "powerprofile", "idleinhibitor", "charging"]
+    readonly property var systemStateActivities: ["capslock", "powerprofile", "idleinhibitor", "charging", "mediaplayback", "audiooutput"]
     readonly property var systemActivities: systemLevelActivities.concat(systemStateActivities)
     readonly property var dotTransientActivities: ["notification"].concat(systemActivities)
     function isSystemActivity(activityId) {
@@ -538,6 +538,9 @@ QtObject {
         }
         if (systemLevelActivities.indexOf(activityId) !== -1)
             return systemCompactTarget;
+        // the media playback pulse is the media face
+        if (activityId === "mediaplayback")
+            return mediaCompactTarget;
         if (systemStateActivities.indexOf(activityId) !== -1)
             return systemStateCompactTarget;
         return isDestination(activityId) ? pillTarget(destinationCompactLength(activityId), compactFaceThickness) : homeCompactTarget;

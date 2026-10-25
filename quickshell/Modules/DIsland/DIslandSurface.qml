@@ -763,7 +763,22 @@ Item {
         id: compactSystemComponent
 
         Loader {
-            sourceComponent: root.systemModel.levelActivity ? compactSystemLevelComponent : compactSystemStateComponent
+            sourceComponent: root.systemModel.levelActivity ? compactSystemLevelComponent : root.systemModel.kind === "mediaplayback" ? compactMediaPulseComponent : compactSystemStateComponent
+        }
+    }
+
+    // the media playback pulse: the media face, at its own size in the system face's slot
+    Component {
+        id: compactMediaPulseComponent
+
+        Item {
+            MediaCompact {
+                anchors.centerIn: parent
+                width: root.controller.mediaCompactTarget.width
+                height: root.controller.mediaCompactTarget.height
+                mediaModel: root.mediaModel
+                controller: root.controller
+            }
         }
     }
 

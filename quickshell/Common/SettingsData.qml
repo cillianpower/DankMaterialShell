@@ -3049,8 +3049,9 @@ Singleton {
         return activeIslandConfigsForScreen(screen).some(cfg => !islandSetting(cfg, "islandNotificationPopups"));
     }
 
-    function dankIslandHandlesSystemOsd(screen) {
-        return activeIslandConfigsForScreen(screen).some(cfg => islandSetting(cfg, "islandSystemOsd"));
+    // key: an OSD the island takes only when its own setting is on too (islandMediaPlaybackOsd, islandAudioOutputOsd)
+    function dankIslandHandlesSystemOsd(screen, key) {
+        return activeIslandConfigsForScreen(screen).some(cfg => islandSetting(cfg, "islandSystemOsd") && (!key || islandSetting(cfg, key)));
     }
 
     function dankIslandOwnsEdge(screen, edge) {

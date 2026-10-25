@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell.Services.Mpris
 import qs.Common
 import qs.Services
 
@@ -13,6 +14,13 @@ QtObject {
     // Off: system levels and state changes keep their OSDs and only the face's own controls open this activity.
     property bool enabled: true
     property bool chargingPulseEnabled: true
+    // islandMediaPlaybackOsd, islandAudioOutputOsd: the media playback and audio output OSDs as pulses
+    property bool mediaPlaybackEnabled: false
+    property bool audioOutputEnabled: false
+    property string audioOutputName: ""
+    property string audioOutputIcon: "speaker"
+    // the track and state the last media pulse showed: a player re-sends its metadata often (a stream's growing length)
+    property string mediaShown: ""
 
     readonly property bool volumeActivity: kind === "volume"
     readonly property bool micActivity: kind === "mic"
@@ -61,6 +69,8 @@ QtObject {
             return I18n.tr("Idle inhibitor", "island system face: idle inhibitor title");
         case "charging":
             return BatteryService.isPluggedIn ? I18n.tr("Plugged in", "island system face: power connected title") : I18n.tr("Discharging", "island system face: power disconnected title");
+        case "audiooutput":
+            return I18n.tr("Audio Output");
         }
         return "";
     }
@@ -75,6 +85,8 @@ QtObject {
             return SessionService.idleInhibited ? I18n.tr("On") : I18n.tr("Off");
         case "charging":
             return root.chargingValue();
+        case "audiooutput":
+            return root.audioOutputName;
         }
         return muted ? I18n.tr("Muted", "island system face: muted value label") : Math.round(value) + unit;
     }
@@ -94,6 +106,8 @@ QtObject {
             return SessionService.idleInhibited ? "motion_sensor_active" : "motion_sensor_idle";
         case "charging":
             return BatteryService.getBatteryIcon();
+        case "audiooutput":
+            return root.audioOutputIcon;
         }
         return "";
     }
@@ -229,6 +243,47 @@ QtObject {
         function onInhibitorChanged() {
             if (SettingsData.osdIdleInhibitorEnabled)
                 root.show("idleinhibitor");
+        }
+    }
+
+    property Connections mediaPlaybackConnection: Connections {
+        target: MprisController.activePlayer
+        enabled: root.enabled && root.mediaPlaybackEnabled
+
+        function update() {
+            const player = MprisController.activePlayer;
+            if (!SettingsData.osdMediaPlaybackEnabled || !player?.trackTitle || player.playbackState === MprisPlaybackState.Stopped || MprisController.isFirefoxYoutubeHoverPreview(player))
+                return;
+            const meta = MprisController.bestMetadataPlayer(player);
+            const shown = [MprisController.displayTrackTitle(meta), meta.trackArtist || "", meta.trackAlbum || "", player.isPlaying].join("\n");
+            if (shown === root.mediaShown)
+                return;
+            root.mediaShown = shown;
+            // the media face already shows it
+            if (root.controller.activeActivity === "media" && !root.controller.expanded)
+                return;
+            root.show("mediaplayback");
+        }
+
+        function onMetadataChanged() {
+            update();
+        }
+
+        function onIsPlayingChanged() {
+            update();
+        }
+    }
+
+    property Connections audioOutputConnection: Connections {
+        target: AudioService
+        enabled: root.enabled && root.audioOutputEnabled
+
+        function onAudioOutputCycled(deviceName, deviceIcon) {
+            if (!SettingsData.osdAudioOutputEnabled)
+                return;
+            root.audioOutputName = deviceName;
+            root.audioOutputIcon = deviceIcon;
+            root.show("audiooutput");
         }
     }
 

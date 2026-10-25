@@ -51,6 +51,14 @@ Item {
         return screens.filter(screen => !SettingsData.dankIslandHandlesSystemOsd(screen));
     }
 
+    // the screens an OSD the island can take (key: its island setting) still shows on as an OSD
+    function osdScreensBesideIsland(key) {
+        const screens = SettingsData.getFilteredScreens("osd");
+        if (!SettingsData.dankIslandEnabled)
+            return screens;
+        return screens.filter(screen => !SettingsData.dankIslandHandlesSystemOsd(screen, key));
+    }
+
     function recreateOsdSurfaces() {
         OSDManager.currentOSDsByScreen = ({});
         osdSurfacesLoaded = false;
@@ -1280,7 +1288,7 @@ Item {
                 }
 
                 Variants {
-                    model: SettingsData.osdMediaPlaybackEnabled ? SettingsData.getFilteredScreens("osd") : []
+                    model: SettingsData.osdMediaPlaybackEnabled ? root.osdScreensBesideIsland("islandMediaPlaybackOsd") : []
 
                     delegate: MediaPlaybackOSD {}
                 }
@@ -1322,7 +1330,7 @@ Item {
                 }
 
                 Variants {
-                    model: SettingsData.osdAudioOutputEnabled ? SettingsData.getFilteredScreens("osd") : []
+                    model: SettingsData.osdAudioOutputEnabled ? root.osdScreensBesideIsland("islandAudioOutputOsd") : []
 
                     delegate: AudioOutputOSD {}
                 }

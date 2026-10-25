@@ -486,6 +486,8 @@ Item {
         controller: controller
         enabled: root.setting("islandSystemOsd") && root.barConfig?.visible !== false
         chargingPulseEnabled: root.setting("islandChargingPulse")
+        mediaPlaybackEnabled: root.setting("islandMediaPlaybackOsd")
+        audioOutputEnabled: root.setting("islandAudioOutputOsd")
     }
 
     IslandNotificationSource {

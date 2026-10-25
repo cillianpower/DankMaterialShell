@@ -403,6 +403,20 @@ test("hidden bars drop out of routing and hosted defaults keep popups and OSDs s
     assert.deepEqual(settings.activeIslandConfigsForScreen(screen), [], "a hidden island-layout bar swallows nothing either");
 });
 
+test("the island takes the media and audio output OSDs only with its system OSDs and their own setting", () => {
+    const screen = { name: "internal" };
+    const settings = hostedSettings([{ id: "a", centerWidgets: [islandWidget({ islandSystemOsd: true })] }]);
+    const island = () => settings.barConfigs[0].centerWidgets[0];
+    settings.ShellLayout = { islandConfigs: () => settings.barConfigs };
+    assert.equal(settings.dankIslandHandlesSystemOsd(screen), true);
+    assert.equal(settings.dankIslandHandlesSystemOsd(screen, "islandMediaPlaybackOsd"), false, "off by default: the OSD stays an OSD");
+    island().islandMediaPlaybackOsd = true;
+    assert.equal(settings.dankIslandHandlesSystemOsd(screen, "islandMediaPlaybackOsd"), true);
+    assert.equal(settings.dankIslandHandlesSystemOsd(screen, "islandAudioOutputOsd"), false, "each OSD has its own setting");
+    island().islandSystemOsd = false;
+    assert.equal(settings.dankIslandHandlesSystemOsd(screen, "islandMediaPlaybackOsd"), false, "an island without system OSDs takes none");
+});
+
 test("shared launcher entry points bypass a previously loaded launcher and forward query/mode", () => {
     const calls = [];
     let fallbacks = 0;

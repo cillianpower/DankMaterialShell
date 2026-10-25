@@ -39,6 +39,9 @@ var ISLAND_DEFAULTS = {
     islandNotificationExpand: false,
     islandNotificationPopups: false,
     islandSystemOsd: true,
+    // with islandSystemOsd, the media playback and audio output OSDs are the island's pulses too
+    islandMediaPlaybackOsd: false,
+    islandAudioOutputOsd: false,
     islandChargingPulse: true,
     islandHomeCompactTight: false,
     // a bar's island keeps its home face on the bar while one of its pages is open, as a menu bar item does
