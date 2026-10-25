@@ -164,28 +164,10 @@ PanelWindow {
     }
 
     // an untinted frame: the osd's own window blurs its body (with its connectors), so the blur moves with it
-    readonly property var _localBodyDescriptor: {
-        const side = connectedBarSide;
-        const hidden = 1 - connectedReveal;
-        const horizontal = side === "top" || side === "bottom";
-        return {
-            "kind": "osd",
-            "visible": connectedFrameMode && visible,
-            "barSide": side,
-            "bodyRect": {
-                "x": shadowBuffer,
-                "y": shadowBuffer,
-                "width": alignedWidth,
-                "height": alignedHeight
-            },
-            "animationOffset": {
-                "x": horizontal ? 0 : (side === "left" ? -alignedWidth : alignedWidth) * hidden,
-                "y": horizontal ? (side === "top" ? -alignedHeight : alignedHeight) * hidden : 0
-            },
-            "scale": 1,
-            "opacity": 0
-        };
-    }
+    readonly property var _localBodyDescriptor: Object.assign(_connectedBody(shadowBuffer, shadowBuffer), {
+        "visible": connectedFrameMode && visible,
+        "opacity": 0
+    })
 
     ConnectedBodyBlur {
         targetWindow: root
@@ -229,19 +211,26 @@ PanelWindow {
             ConnectedModeState.releaseSurface(name, "osd", _chromeOwnerId);
             return;
         }
-        const side = connectedBarSide;
-        const hidden = 1 - connectedReveal;
-        const horizontal = side === "top" || side === "bottom";
-        ConnectedModeState.claimSurface(name, "osd", {
-            "kind": "osd",
+        ConnectedModeState.claimSurface(name, "osd", Object.assign(_connectedBody(alignedX, alignedY), {
             "screenName": name,
             "phase": shouldBeVisible ? "open" : "closing",
             "visible": true,
             "presented": true,
+            "opacity": Theme.connectedSurfaceColor.a
+        }), _chromeOwnerId, false);
+    }
+
+    // the body at (x, y), joined to its edge and slid back into it until revealed
+    function _connectedBody(x, y) {
+        const side = connectedBarSide;
+        const hidden = 1 - connectedReveal;
+        const horizontal = side === "top" || side === "bottom";
+        return {
+            "kind": "osd",
             "barSide": side,
             "bodyRect": {
-                "x": alignedX,
-                "y": alignedY,
+                "x": x,
+                "y": y,
                 "width": alignedWidth,
                 "height": alignedHeight
             },
@@ -249,9 +238,8 @@ PanelWindow {
                 "x": horizontal ? 0 : (side === "left" ? -alignedWidth : alignedWidth) * hidden,
                 "y": horizontal ? (side === "top" ? -alignedHeight : alignedHeight) * hidden : 0
             },
-            "scale": 1,
-            "opacity": Theme.connectedSurfaceColor.a
-        }, _chromeOwnerId, false);
+            "scale": 1
+        };
     }
 
     onConnectedRevealChanged: _syncConnectedChrome()
