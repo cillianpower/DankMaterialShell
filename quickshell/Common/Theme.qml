@@ -1170,9 +1170,10 @@ Singleton {
     readonly property real notificationCardPadding: spacingM
     readonly property real notificationCardPaddingCompact: spacingS
 
-    readonly property real stateLayerHover: 0.08
+    // flat: hover and press change the content, not the background; keyboard focus keeps its fill
+    readonly property real stateLayerHover: flatComponents ? 0 : 0.08
     readonly property real stateLayerFocus: 0.12
-    readonly property real stateLayerPressed: 0.12
+    readonly property real stateLayerPressed: flatComponents ? 0 : 0.12
     readonly property real stateLayerDrag: 0.16
 
     readonly property int popoutAnimationDuration: {
@@ -1381,7 +1382,7 @@ Singleton {
     readonly property real buttonHeightS: compactDensity ? 28 : 40
     readonly property real buttonHeightM: compactDensity ? 36 : 56
     readonly property real buttonMinWidth: 58
-    readonly property real pressScale: 0.98
+    readonly property real pressScale: flatComponents ? 1 : 0.98
     readonly property real iconEnterScale: 0.6
     readonly property real osdHeight: 60
     readonly property real osdLevelWidth: 264

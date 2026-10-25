@@ -151,7 +151,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: Math.min(Theme.cornerRadiusFull, height / 2)
-            color: clockArea.containsMouse ? Theme.surfaceTextHover : "transparent"
+            color: clockArea.containsMouse ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent"
 
             NumericText {
                 id: clockText

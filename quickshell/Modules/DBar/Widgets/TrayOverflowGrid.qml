@@ -74,7 +74,7 @@ Grid {
                 radiusOverride: root.bar ? -1 : Theme.fullRadius(width, height)
                 color: itemArea.pressed
                     ? Theme.withAlpha(root.bar ? Theme.onSurface : Theme.surfaceText, Theme.stateLayerPressed)
-                    : (itemArea.containsMouse ? (root.bar ? Theme.withAlpha(Theme.onSurface, Theme.stateLayerHover) : Theme.surfaceTextHover) : "transparent")
+                    : (itemArea.containsMouse ? (root.bar ? Theme.withAlpha(Theme.onSurface, Theme.stateLayerHover) : Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover)) : "transparent")
                 border.width: popupDragHandler.dragging ? Theme.outlineWidthFocused : 0
                 border.color: Theme.primary
                 opacity: popupDragHandler.dragging ? 0.8 : 1.0

@@ -560,7 +560,7 @@ Item {
             radius: group.vertical ? Theme.cornerRadius : Theme.fullRadius(width, height)
             // the menu bar face: lit while its page is open (IslandController.litFaceGroup)
             readonly property bool lit: root.controller.litFaceGroup === group.groupId
-            color: lit ? Theme.withAlpha(Theme.surfaceText, 0.16) : groupArea.containsMouse ? Theme.surfaceTextHover : "transparent"
+            color: lit ? Theme.withAlpha(Theme.surfaceText, 0.16) : groupArea.containsMouse ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent"
             visible: lit || !group.isClock && !group.isTray && (group.vertical || !group.usesBattery)
         }
 
@@ -753,7 +753,7 @@ Item {
                             radius: Theme.fullRadius(width, height)
                             color: trayMouseArea.pressed
                                 ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerPressed)
-                                : (trayItemRoot.hovered ? Theme.surfaceTextHover : "transparent")
+                                : (trayItemRoot.hovered ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent")
                             border.width: dragHandler.dragging ? Theme.outlineWidthFocused : 0
                             border.color: Theme.primary
                             opacity: dragHandler.dragging ? 0.8 : 1.0
@@ -906,7 +906,7 @@ Item {
                     radius: Theme.fullRadius(width, height)
                     color: caretArea.pressed
                         ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerPressed)
-                        : (caretRoot.hovered ? Theme.surfaceTextHover : "transparent")
+                        : (caretRoot.hovered ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent")
                 }
 
                 DIcon {
