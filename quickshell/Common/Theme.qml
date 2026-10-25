@@ -1350,12 +1350,13 @@ Singleton {
     readonly property real sliderHandleHeightL: 68
     readonly property real sliderTrackHeightXL: 96
     readonly property real sliderHandleHeightXL: 108
-    readonly property real switchTrackWidth: 52
-    readonly property real switchTrackHeight: 32
-    readonly property real switchOutlineWidth: 2
-    readonly property real switchThumbUnselected: 16
-    readonly property real switchThumbSelected: 24
-    readonly property real switchThumbPressed: 28
+    // flat: a small switch whose track carries the state; the thumb keeps its size
+    readonly property real switchTrackWidth: flatComponents ? 28 : 52
+    readonly property real switchTrackHeight: flatComponents ? 16 : 32
+    readonly property real switchOutlineWidth: flatComponents ? 0 : 2
+    readonly property real switchThumbUnselected: flatComponents ? 12 : 16
+    readonly property real switchThumbSelected: flatComponents ? 12 : 24
+    readonly property real switchThumbPressed: flatComponents ? 12 : 28
     readonly property real sliderStopSize: 4
     readonly property real sliderTickSize: 3
     readonly property real menuItemHeight: compactDensity ? 24 : 40
