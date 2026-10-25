@@ -148,7 +148,8 @@ var DEFAULTS = {
     focusedWindow: {
         focusedWindowCompactMode: false,
         focusedWindowShowIcon: true,
-        focusedWindowSize: 1
+        focusedWindowSize: 1,
+        focusedWindowTitleMotion: "none"
     },
     runningApps: {
         runningAppsCompactMode: true,

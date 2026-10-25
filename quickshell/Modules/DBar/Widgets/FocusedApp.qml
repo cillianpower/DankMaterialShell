@@ -37,6 +37,12 @@ BasePill {
     readonly property real effectiveHorizontalWidth: Math.max(0, Math.min(maxWidth, availableWidth))
     readonly property real effectiveHorizontalInnerWidth: Math.max(0, effectiveHorizontalWidth - horizontalPadding * 2)
     property var activeWindow: null
+    // focusedWindowTitleMotion: as the title changes it crossfades ("crossfade") while its width springs
+    readonly property string titleMotion: isVerticalOrientation || SettingsData.reduceMotion || Theme.springMotionDisabled ? "none" : SettingsData.widgetOption("focusedWindow", widgetData, "focusedWindowTitleMotion")
+    readonly property bool primarySizeAnimated: titleMotion !== "none"
+    readonly property bool primarySizeMoving: contentItem?.sizeMoving ?? false
+    // the last title fades out as the width springs shut (one binding: a separate "leaving" one lags it by an evaluation)
+    readonly property bool titleShown: hasWindowsOnCurrentWorkspace || (primarySizeAnimated && (contentItem?.implicitWidth ?? 0) > 0)
     property var activeDesktopEntry: null
     property bool isHovered: mouseArea.containsMouse
 
@@ -113,12 +119,13 @@ BasePill {
         return CompositorService.windowOnActiveWorkspace(screenName, activeWindow, popoutVisible);
     }
 
-    width: hasWindowsOnCurrentWorkspace ? (isVerticalOrientation ? barThickness : (effectiveHorizontalInnerWidth > 0 ? visualWidth : 0)) : 0
-    height: hasWindowsOnCurrentWorkspace ? (isVerticalOrientation ? visualHeight : barThickness) : 0
-    visible: hasWindowsOnCurrentWorkspace && (isVerticalOrientation || effectiveHorizontalInnerWidth > 0)
+    width: titleShown ? (isVerticalOrientation ? barThickness : (effectiveHorizontalInnerWidth > 0 ? visualWidth : 0)) : 0
+    height: titleShown ? (isVerticalOrientation ? visualHeight : barThickness) : 0
+    visible: titleShown && (isVerticalOrientation || effectiveHorizontalInnerWidth > 0)
 
     content: Component {
         Item {
+            id: titleContent
             readonly property bool iconShown: horizontalAppIcon.visible || horizontalSteamIcon.visible
             readonly property real appTextNatural: appText.visible ? Math.min(appText.implicitWidth, root.compactMode ? 80 : 180) : 0
             readonly property real naturalWidth: {
@@ -134,14 +141,18 @@ BasePill {
                 return parts.reduce((sum, part) => sum + part, 0) + Math.max(0, parts.length - 1) * contentRow.spacing;
             }
             readonly property real minimumWidth: (iconShown ? contentRow.iconSize + contentRow.spacing : 0) + Math.min(48, appText.visible ? appTextNatural : titleText.visible ? titleText.implicitWidth : 0)
-            implicitWidth: {
+            readonly property real targetWidth: {
                 if (!root.hasWindowsOnCurrentWorkspace)
                     return 0;
                 if (root.isVerticalOrientation)
                     return root.contentThickness;
                 return Math.min(contentRow.implicitWidth, root.effectiveHorizontalInnerWidth);
             }
-            width: root.isVerticalOrientation ? root.contentThickness : Math.min(implicitWidth, root.effectiveHorizontalInnerWidth)
+            implicitWidth: root.primarySizeAnimated ? widthMotion.value : targetWidth
+            onTargetWidthChanged: widthMotion.retarget(targetWidth)
+            readonly property bool sizeMoving: widthMotion.running
+            // the bar allots the width it springs to at once: a shrinking title keeps its width until the spring is there
+            width: root.isVerticalOrientation ? root.contentThickness : root.primarySizeAnimated ? implicitWidth : Math.min(implicitWidth, root.effectiveHorizontalInnerWidth)
             implicitHeight: root.contentThickness
             clip: false
 
@@ -190,7 +201,82 @@ BasePill {
                 color: root.contentColor
             }
 
+            property string shownTitle: ""
+            // StyledText animates any opacity it is given; an animation's own writes pass it by
+            property real enterOpacityFrom: 0
+
+            SpringMotion {
+                id: widthMotion
+                enabled: root.primarySizeAnimated
+                stiffness: Anims.smallSpring.stiffness
+                damping: Anims.smallSpring.damping
+                mass: Anims.smallSpring.mass
+                positionEpsilon: 0.05
+                velocityEpsilon: 0.05
+                Component.onCompleted: snapTo(titleContent.targetWidth)
+            }
+
+            function titleChanged() {
+                const previous = shownTitle;
+                shownTitle = titleText.text;
+                if (root.titleMotion === "none")
+                    return;
+                // the leaving title goes on from wherever it is, so a change mid-transition never jumps
+                if (previous)
+                    ghostComponent.createObject(titleClip, {
+                    "text": previous,
+                    "offsetInRow": titleText.x,
+                    // the budget the bar allots next is not out yet: this is still the leaving title's
+                    "maximumWidth": titleText.budget,
+                    "opacity": titleText.opacity
+                });
+                titleEnter.stop();
+                enterOpacityFrom = 0;
+                titleEnter.start();
+            }
+
+            NumberAnimation {
+                id: titleEnter
+                target: titleText
+                property: "opacity"
+                from: titleContent.enterOpacityFrom
+                to: 1
+                duration: Anims.smallDuration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Anims.smoothSpatial
+            }
+
+            Component {
+                id: ghostComponent
+
+                StyledText {
+                    id: ghost
+                    required property real offsetInRow
+                    required property real maximumWidth
+
+                    // where the centred row held it
+                    x: (parent.width - offsetInRow - width) / 2 + offsetInRow
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, maximumWidth)
+                    font.pixelSize: titleText.font.pixelSize
+                    color: titleText.color
+                    // a title that fit stays whole: Qt can middle-elide a text exactly its own width as it moves
+                    elide: implicitWidth > maximumWidth ? titleText.elide : Text.ElideNone
+                    wrapMode: Text.NoWrap
+                    maximumLineCount: 1
+
+                    NumberAnimation on opacity {
+                        to: 0
+                        duration: Anims.smallDuration
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Anims.smoothSpatial
+                        onFinished: ghost.destroy()
+                    }
+                }
+            }
+
             Item {
+                id: titleClip
                 clip: true
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
@@ -199,7 +285,8 @@ BasePill {
                 Row {
                     id: contentRow
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
+                    // centred while its width springs, so a title keeps its place
+                    x: root.primarySizeAnimated ? (parent.width - width) / 2 : 0
                     spacing: Theme.spacingS
                     visible: !root.isVerticalOrientation
 
@@ -277,6 +364,8 @@ BasePill {
                     StyledText {
                         id: titleText
                         text: {
+                            if (!root.hasWindowsOnCurrentWorkspace)
+                                return "";
                             const title = activeWindow && activeWindow.title ? activeWindow.title : "";
                             // the app's own name, also in compact mode where appText shows none
                             const appName = activeWindow && activeWindow.appId ? Paths.getAppName(activeWindow.appId, activeDesktopEntry) : "";
@@ -295,7 +384,7 @@ BasePill {
                         // the minimum information, title only (compact): a long title keeps its start and its end
                         elide: compactMode && SettingsData.minimalInfo ? Text.ElideMiddle : Text.ElideRight
                         maximumLineCount: 1
-                        width: {
+                        readonly property real budget: {
                             const sp = contentRow.spacing;
                             let used = 0;
                             if (horizontalAppIcon.visible)
@@ -306,10 +395,11 @@ BasePill {
                                 used += appText.width + sp;
                             if (appSeparator.visible)
                                 used += appSeparator.width + sp;
-                            const budget = root.effectiveHorizontalInnerWidth - used;
-                            return Math.min(implicitWidth, Math.max(0, budget));
+                            return Math.max(0, root.effectiveHorizontalInnerWidth - used);
                         }
+                        width: Math.min(implicitWidth, budget)
                         visible: text.length > 0
+                        onTextChanged: titleChanged()
                     }
                 }
             }
