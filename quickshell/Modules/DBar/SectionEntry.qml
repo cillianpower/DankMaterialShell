@@ -1,4 +1,5 @@
 import QtQuick
+import qs.Common
 import "OverflowLayout.js" as OverflowLayout
 
 Item {
@@ -17,9 +18,17 @@ Item {
     readonly property real itemWidth: widgetItem?.width ?? 0
     readonly property real itemHeight: widgetItem?.height ?? 0
     readonly property bool available: active && widgetLoader.widgetEnabled && itemVisible && effectiveVisible && itemWidth > 0 && itemHeight > 0
-    readonly property real primarySize: available ? (sectionContext.isVertical ? itemHeight : itemWidth) : 0
+    readonly property real targetPrimarySize: available ? (sectionContext.isVertical ? itemHeight : itemWidth) : 0
+    // smooth motion: the slot springs as the widget appears, goes and resizes, and its gap opens with it (presence); a
+    // widget that springs its own size (primarySizeAnimated) only has its slot come and go
+    readonly property bool slotMotion: primed && Anims.smoothMotion && !Theme.springMotionDisabled
+    readonly property bool primarySizeAnimated: !!widgetItem && "primarySizeAnimated" in widgetItem && widgetItem.primarySizeAnimated
+    readonly property real primarySize: sizeMotion.enabled ? sizeMotion.value : targetPrimarySize
+    readonly property real presence: presenceMotion.value
+    readonly property bool moving: sizeMotion.running || presenceMotion.running || (primarySizeAnimated && !!widgetItem.primarySizeMoving)
+    property bool primed: false
     // A flexible widget reports the width it wants and the width it can live with; the resolver allots between them.
-    readonly property real preferredSize: !available ? 0 : widgetItem && "naturalPrimarySize" in widgetItem ? widgetItem.naturalPrimarySize : primarySize
+    readonly property real preferredSize: !available ? 0 : widgetItem && "naturalPrimarySize" in widgetItem ? widgetItem.naturalPrimarySize : targetPrimarySize
     readonly property real minimumSize: available && widgetItem && "minimumPrimarySize" in widgetItem ? Math.min(preferredSize, widgetItem.minimumPrimarySize) : preferredSize
     readonly property real allottedSize: sectionContext.allottedSizes[occurrenceOrder] ?? 0
     readonly property string overflowMode: OverflowLayout.placement(itemData, sectionContext.overflowDefaultMode)
@@ -33,6 +42,34 @@ Item {
     visible: active && widgetLoader.widgetEnabled && !inOverflow
     width: participates ? (sectionContext.isVertical ? sectionContext.width : itemWidth) : 0
     height: participates ? itemHeight : 0
+    opacity: presence
+
+    onTargetPrimarySizeChanged: sizeMotion.retarget(targetPrimarySize)
+    onAvailableChanged: presenceMotion.retarget(available ? 1 : 0)
+    // the first layout lands in place
+    Component.onCompleted: Qt.callLater(() => root.primed = true)
+
+    SpringMotion {
+        id: sizeMotion
+        enabled: root.slotMotion && !root.primarySizeAnimated
+        stiffness: Anims.smallSpring.stiffness
+        damping: Anims.smallSpring.damping
+        mass: Anims.smallSpring.mass
+        positionEpsilon: 0.05
+        velocityEpsilon: 0.05
+        Component.onCompleted: snapTo(root.targetPrimarySize)
+    }
+
+    SpringMotion {
+        id: presenceMotion
+        enabled: root.slotMotion
+        stiffness: Anims.smallSpring.stiffness
+        damping: Anims.smallSpring.damping
+        mass: Anims.smallSpring.mass
+        positionEpsilon: 0.002
+        velocityEpsilon: 0.002
+        Component.onCompleted: snapTo(root.available ? 1 : 0)
+    }
 
     Item {
         id: slot

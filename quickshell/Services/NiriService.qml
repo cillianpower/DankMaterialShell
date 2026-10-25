@@ -11,6 +11,7 @@ import qs.DCommon.Common as DCommon
 import "../Common/OutputModel.js" as OutputModel
 import "../Common/BlurStrength.js" as BlurStrength
 import "../Common/ShellShadow.js" as ShellShadow
+import "../Common/FocusMotion.js" as FocusMotion
 
 Singleton {
     id: root
@@ -30,6 +31,14 @@ Singleton {
     property bool titleOnlyWindowsUpdate: false
     property var displayScales: ({})
     property var lastFocusedWindowId: null
+    // which way the view moved at the last focus change; serial counts changes, time (ms) dates them
+    property var focusMotion: ({
+            "axis": "none",
+            "sign": 0,
+            "serial": 0,
+            "time": 0
+        })
+    property var _focusMotionTracker: FocusMotion.tracker()
 
     property var _realOutputs: ({})
 
@@ -525,6 +534,7 @@ Singleton {
             return;
         }
 
+        publishFocusMotion(FocusMotion.workspaceFocused(_focusMotionTracker, data.id, root.workspaces));
         focusedWorkspaceId = data.id;
         focusedWorkspaceIndex = allWorkspaces.findIndex(w => w.id === data.id);
 
@@ -535,8 +545,20 @@ Singleton {
         updateCurrentOutputWorkspaces();
     }
 
+    function publishFocusMotion(motion) {
+        if (!motion)
+            return;
+        focusMotion = {
+            "axis": motion.axis,
+            "sign": motion.sign,
+            "serial": focusMotion.serial + 1,
+            "time": Date.now()
+        };
+    }
+
     function handleWindowFocusChanged(data) {
         const focusedWindowId = data.id;
+        publishFocusMotion(FocusMotion.windowFocused(_focusMotionTracker, focusedWindowId, windows, workspaces));
         if (focusedWindowId !== null && focusedWindowId !== undefined)
             lastFocusedWindowId = focusedWindowId;
 
@@ -633,6 +655,9 @@ Singleton {
         const existingIndex = windows.findIndex(w => w.id === window.id);
         if (existingIndex < 0) {
             windows = sortWindowsByLayout([...windows, window]);
+            // a new window takes focus here, with no WindowFocusChanged
+            if (window.is_focused)
+                publishFocusMotion(FocusMotion.windowFocused(_focusMotionTracker, window.id, windows, workspaces));
             return;
         }
 

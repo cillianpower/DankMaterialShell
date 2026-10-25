@@ -37,6 +37,15 @@ BasePill {
     readonly property real effectiveHorizontalWidth: Math.max(0, Math.min(maxWidth, availableWidth))
     readonly property real effectiveHorizontalInnerWidth: Math.max(0, effectiveHorizontalWidth - horizontalPadding * 2)
     property var activeWindow: null
+    // focusedWindowTitleMotion: as the title changes it crossfades ("crossfade") or slides in the way niri's view moved
+    // ("slide") while its width springs
+    readonly property string titleMotion: isVerticalOrientation || SettingsData.reduceMotion || Theme.springMotionDisabled ? "none" : SettingsData.widgetOption("focusedWindow", widgetData, "focusedWindowTitleMotion")
+    readonly property bool primarySizeAnimated: titleMotion !== "none"
+    readonly property bool primarySizeMoving: contentItem?.sizeMoving ?? false
+    // the last title fades out as the width springs shut (one binding: a separate "leaving" one lags it by an evaluation)
+    readonly property bool titleShown: hasWindowsOnCurrentWorkspace || (primarySizeAnimated && (contentItem?.implicitWidth ?? 0) > 0)
+    readonly property int focusMotionSerial: NiriService.focusMotion.serial
+    onFocusMotionSerialChanged: contentItem?.lateMotion?.()
     property var activeDesktopEntry: null
     property bool isHovered: mouseArea.containsMouse
 
@@ -113,12 +122,13 @@ BasePill {
         return CompositorService.windowOnActiveWorkspace(screenName, activeWindow, popoutVisible);
     }
 
-    width: hasWindowsOnCurrentWorkspace ? (isVerticalOrientation ? barThickness : (effectiveHorizontalInnerWidth > 0 ? visualWidth : 0)) : 0
-    height: hasWindowsOnCurrentWorkspace ? (isVerticalOrientation ? visualHeight : barThickness) : 0
-    visible: hasWindowsOnCurrentWorkspace && (isVerticalOrientation || effectiveHorizontalInnerWidth > 0)
+    width: titleShown ? (isVerticalOrientation ? barThickness : (effectiveHorizontalInnerWidth > 0 ? visualWidth : 0)) : 0
+    height: titleShown ? (isVerticalOrientation ? visualHeight : barThickness) : 0
+    visible: titleShown && (isVerticalOrientation || effectiveHorizontalInnerWidth > 0)
 
     content: Component {
         Item {
+            id: titleContent
             readonly property bool iconShown: horizontalAppIcon.visible || horizontalSteamIcon.visible
             readonly property real appTextNatural: appText.visible ? Math.min(appText.implicitWidth, root.compactMode ? 80 : 180) : 0
             readonly property real naturalWidth: {
@@ -134,14 +144,18 @@ BasePill {
                 return parts.reduce((sum, part) => sum + part, 0) + Math.max(0, parts.length - 1) * contentRow.spacing;
             }
             readonly property real minimumWidth: (iconShown ? contentRow.iconSize + contentRow.spacing : 0) + Math.min(48, appText.visible ? appTextNatural : titleText.visible ? titleText.implicitWidth : 0)
-            implicitWidth: {
+            readonly property real targetWidth: {
                 if (!root.hasWindowsOnCurrentWorkspace)
                     return 0;
                 if (root.isVerticalOrientation)
                     return root.contentThickness;
                 return Math.min(contentRow.implicitWidth, root.effectiveHorizontalInnerWidth);
             }
-            width: root.isVerticalOrientation ? root.contentThickness : Math.min(implicitWidth, root.effectiveHorizontalInnerWidth)
+            implicitWidth: root.primarySizeAnimated ? widthMotion.value : targetWidth
+            onTargetWidthChanged: widthMotion.retarget(targetWidth)
+            readonly property bool sizeMoving: widthMotion.running
+            // the bar allots the width it springs to at once: a shrinking title keeps its width until the spring is there
+            width: root.isVerticalOrientation ? root.contentThickness : root.primarySizeAnimated ? implicitWidth : Math.min(implicitWidth, root.effectiveHorizontalInnerWidth)
             implicitHeight: root.contentThickness
             clip: false
 
@@ -190,7 +204,187 @@ BasePill {
                 color: root.contentColor
             }
 
+            property string shownTitle: ""
+            property real titleChangedAt: 0
+            property bool titleChangeDirected: true
+            property var lastGhost: null
+            // StyledText animates any opacity it is given; an animation's own writes pass it by
+            property real enterOpacityFrom: 0
+
+            SpringMotion {
+                id: widthMotion
+                enabled: root.primarySizeAnimated
+                stiffness: Anims.smallSpring.stiffness
+                damping: Anims.smallSpring.damping
+                mass: Anims.smallSpring.mass
+                positionEpsilon: 0.05
+                velocityEpsilon: 0.05
+                Component.onCompleted: snapTo(titleContent.targetWidth)
+            }
+
+            // a focus change younger than this is the one that changed the title
+            readonly property int focusMotionWindow: 250
+
+            function takeFocusMotion() {
+                const motion = NiriService.focusMotion;
+                if (motion.serial <= consumedMotionSerial || Date.now() - motion.time > focusMotionWindow)
+                    return null;
+                consumedMotionSerial = motion.serial;
+                return motion;
+            }
+            property int consumedMotionSerial: NiriService.focusMotion.serial
+
+            function slideOffset(motion) {
+                if (root.titleMotion !== "slide" || !motion)
+                    return Qt.point(0, 0);
+                return Qt.point(motion.axis === "x" ? motion.sign * Theme.spacingL : 0, motion.axis === "y" ? motion.sign * Theme.spacingM : 0);
+            }
+
+            function titleChanged() {
+                const previous = shownTitle;
+                shownTitle = titleText.text;
+                if (root.titleMotion === "none")
+                    return;
+                const motion = takeFocusMotion();
+                const offset = slideOffset(motion);
+                titleChangedAt = Date.now();
+                titleChangeDirected = !!motion;
+                // the leaving title goes on from wherever it is, so a change mid-transition never jumps
+                lastGhost = previous ? ghostComponent.createObject(titleClip, {
+                    "text": previous,
+                    "offsetInRow": titleText.x,
+                    // the budget the bar allots next is not out yet: this is still the leaving title's
+                    "maximumWidth": titleText.budget,
+                    "opacity": titleText.opacity,
+                    "startX": titleShift.x,
+                    "startY": titleShift.y,
+                    "exitX": -offset.x,
+                    "exitY": -offset.y
+                }) : null;
+                titleEnter.stop();
+                enterOpacityFrom = 0;
+                titleShift.x = offset.x;
+                titleShift.y = offset.y;
+                titleEnter.start();
+            }
+
+            // niri's event can land after the toplevel's: turn a fresh crossfade into the slide
+            function lateMotion() {
+                if (root.titleMotion !== "slide" || titleChangeDirected || Date.now() - titleChangedAt > Anims.smallDuration / 2)
+                    return;
+                const motion = takeFocusMotion();
+                if (!motion)
+                    return;
+                titleChangeDirected = true;
+                const offset = slideOffset(motion);
+                const remaining = 1 - titleText.opacity;
+                titleEnter.stop();
+                enterOpacityFrom = titleText.opacity;
+                titleShift.x = offset.x * remaining;
+                titleShift.y = offset.y * remaining;
+                titleEnter.start();
+                lastGhost?.leaveTo(-offset.x, -offset.y);
+            }
+
+            ParallelAnimation {
+                id: titleEnter
+
+                NumberAnimation {
+                    target: titleText
+                    property: "opacity"
+                    from: titleContent.enterOpacityFrom
+                    to: 1
+                    duration: Anims.smallDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Anims.smoothSpatial
+                }
+                NumberAnimation {
+                    target: titleShift
+                    property: "x"
+                    to: 0
+                    duration: Anims.smallDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Anims.smoothSpatial
+                }
+                NumberAnimation {
+                    target: titleShift
+                    property: "y"
+                    to: 0
+                    duration: Anims.smallDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Anims.smoothSpatial
+                }
+            }
+
+            Component {
+                id: ghostComponent
+
+                StyledText {
+                    id: ghost
+                    required property real offsetInRow
+                    required property real maximumWidth
+                    property real startX: 0
+                    property real startY: 0
+                    property real exitX: 0
+                    property real exitY: 0
+
+                    function leaveTo(x, y) {
+                        exitX = x;
+                        exitY = y;
+                        leave.restart();
+                    }
+
+                    // where the centred row held it
+                    x: (parent.width - offsetInRow - width) / 2 + offsetInRow
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, maximumWidth)
+                    font.pixelSize: titleText.font.pixelSize
+                    color: titleText.color
+                    // a title that fit stays whole: Qt can middle-elide a text exactly its own width as it moves
+                    elide: implicitWidth > maximumWidth ? titleText.elide : Text.ElideNone
+                    wrapMode: Text.NoWrap
+                    maximumLineCount: 1
+                    transform: Translate {
+                        id: ghostShift
+                        x: ghost.startX
+                        y: ghost.startY
+                    }
+
+                    ParallelAnimation {
+                        id: leave
+                        running: true
+                        onFinished: ghost.destroy()
+
+                        NumberAnimation {
+                            target: ghost
+                            property: "opacity"
+                            to: 0
+                            duration: Anims.smallDuration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anims.smoothSpatial
+                        }
+                        NumberAnimation {
+                            target: ghostShift
+                            property: "x"
+                            to: ghost.exitX
+                            duration: Anims.smallDuration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anims.smoothSpatial
+                        }
+                        NumberAnimation {
+                            target: ghostShift
+                            property: "y"
+                            to: ghost.exitY
+                            duration: Anims.smallDuration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anims.smoothSpatial
+                        }
+                    }
+                }
+            }
+
             Item {
+                id: titleClip
                 clip: true
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
@@ -199,7 +393,8 @@ BasePill {
                 Row {
                     id: contentRow
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
+                    // centred while its width springs, so a title keeps its place
+                    x: root.primarySizeAnimated ? (parent.width - width) / 2 : 0
                     spacing: Theme.spacingS
                     visible: !root.isVerticalOrientation
 
@@ -277,6 +472,8 @@ BasePill {
                     StyledText {
                         id: titleText
                         text: {
+                            if (!root.hasWindowsOnCurrentWorkspace)
+                                return "";
                             const title = activeWindow && activeWindow.title ? activeWindow.title : "";
                             // the app's own name, also in compact mode where appText shows none
                             const appName = activeWindow && activeWindow.appId ? Paths.getAppName(activeWindow.appId, activeDesktopEntry) : "";
@@ -295,7 +492,7 @@ BasePill {
                         // the minimum information, title only (compact): a long title keeps its start and its end
                         elide: compactMode && SettingsData.minimalInfo ? Text.ElideMiddle : Text.ElideRight
                         maximumLineCount: 1
-                        width: {
+                        readonly property real budget: {
                             const sp = contentRow.spacing;
                             let used = 0;
                             if (horizontalAppIcon.visible)
@@ -306,10 +503,14 @@ BasePill {
                                 used += appText.width + sp;
                             if (appSeparator.visible)
                                 used += appSeparator.width + sp;
-                            const budget = root.effectiveHorizontalInnerWidth - used;
-                            return Math.min(implicitWidth, Math.max(0, budget));
+                            return Math.max(0, root.effectiveHorizontalInnerWidth - used);
                         }
+                        width: Math.min(implicitWidth, budget)
                         visible: text.length > 0
+                        transform: Translate {
+                            id: titleShift
+                        }
+                        onTextChanged: titleChanged()
                     }
                 }
             }

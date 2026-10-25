@@ -827,6 +827,8 @@ Item {
 
             readonly property Item body: surfaceContext.kind === "bar" ? surfaceContext.host : null
             readonly property real alongSize: body?.islandHost?.compactTargetSize ?? 0
+            // the island springs its own face; its slot holds the target
+            readonly property bool primarySizeAnimated: true
 
             width: surfaceContext.isVertical ? surfaceContext.widgetThickness : alongSize
             height: surfaceContext.isVertical ? alongSize : surfaceContext.widgetThickness

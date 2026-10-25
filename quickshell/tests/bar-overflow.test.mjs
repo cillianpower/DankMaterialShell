@@ -94,3 +94,19 @@ test("a hidden flexible widget returns once its minimum fits the margin", () => 
     assert.deepEqual(plain(result.sizes.left), [100, 68]);
     assert.deepEqual(plain(solve(...sections, { length: 420 }, { left: [1] }).hidden.left), [1]);
 });
+
+test("an entry coming or going holds its place and opens its gaps only as far as it shows", () => {
+    const at = (entries, hidden = []) => plain(layout.section(entries, hidden, 4, 30, 0));
+    const cases = [
+        [[{ size: 40, presence: 1 }, { size: 20, presence: 0.5 }, { size: 50, presence: 1 }], [0, 42, 64], 114],
+        [[{ size: 40, presence: 1 }, { size: 0, presence: 0.25 }, { size: 50, presence: 1 }], [0, 41, 42], 92],
+        [[{ size: 40, presence: 1 }, { size: 0, presence: 0 }, { size: 50, presence: 1 }], [0, null, 44], 94],
+        [[{ size: 0, presence: 0.5 }], [0], 0]
+    ];
+    for (const [entries, positions, totalSize] of cases) {
+        const result = at(entries);
+        assert.deepEqual(result.positions, positions);
+        assert.equal(result.totalSize, totalSize);
+    }
+    assert.deepEqual(at([{ size: 40, presence: 1 }, { size: 20, presence: 0.5 }], [1]).positions, [34, null]);
+});
