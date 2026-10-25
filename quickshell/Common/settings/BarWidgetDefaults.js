@@ -43,6 +43,8 @@ var ISLAND_DEFAULTS = {
     islandHomeCompactTight: false,
     // a bar's island keeps its home face on the bar while one of its pages is open, as a menu bar item does
     islandMenuBarFace: false,
+    // an island at its section's outer end grows its sheet out of that end of the bar, flush with the screen's edge
+    islandTether: false,
     islandHomeClockDisplay: "both",
     islandHomeVolumeDisplay: "both",
     islandHomeBrightnessDisplay: "both",

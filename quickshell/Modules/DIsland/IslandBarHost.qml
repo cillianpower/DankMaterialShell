@@ -101,8 +101,9 @@ Item {
             pos += root.isVertical ? item.y : item.x;
         return item ? pos : NaN;
     }
-    // an island at its section's outer end grows its sheet out of that end of the bar, flush with the screen's edge
-    readonly property string flushEnd: root.embedded && !root.freeMode ? Resolver.islandTetheredEnd(root.barConfig) : ""
+    // islandTether: an island at its section's outer end grows its sheet out of that end of the bar, flush with the
+    // screen's edge
+    readonly property string flushEnd: root.setting("islandTether") && root.embedded && !root.freeMode ? Resolver.islandTetheredEnd(root.barConfig) : ""
     readonly property real anchorAlong: isNaN(root.slotCentre) ? 0 : root.slotCentre - (root.isVertical ? root.height : root.width) / 2
     onExpandedChanged: {
         if (root.dotMode && root.expanded && !controller.transientActive && root.setting("islandNotificationBadgeClearOnOpen"))
