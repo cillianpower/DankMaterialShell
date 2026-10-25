@@ -467,6 +467,9 @@ var LOCAL_SPEC = {
     springBounce: {
         def: 1
     },
+    springSmoothCriticallyDamped: {
+        def: false
+    },
     motionEffect: {
         def: 0
     },

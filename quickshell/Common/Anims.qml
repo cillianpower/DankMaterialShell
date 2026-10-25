@@ -27,8 +27,9 @@ Singleton {
     readonly property var standardDecel: [0.00, 0.00, 0.00, 1.00, 1.00, 1.00]
     readonly property var standardAccel: [0.30, 0.00, 1.00, 1.00, 1.00, 1.00]
 
-    // Smooth motion (springBounce 0): a curve fitted to a critically damped spring, which never passes its target.
-    readonly property bool smoothMotion: typeof SettingsData !== "undefined" && Math.round(SettingsData.springBounce) === 0
+    // springSmoothCriticallyDamped, with Smooth motion (springBounce 0): springs exactly critically damped and a curve
+    // fitted to one, which never passes its target.
+    readonly property bool smoothMotion: typeof SettingsData !== "undefined" && SettingsData.springSmoothCriticallyDamped && Math.round(SettingsData.springBounce) === 0
     readonly property var smoothSpatial: [0.3, 0.55, 0.05, 1, 1, 1]
 
     // Used by AnimVariants for variant/effect logic

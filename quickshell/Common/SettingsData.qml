@@ -308,6 +308,9 @@ Singleton {
     property bool scrollbarsEnabled: Spec.SPEC.scrollbarsEnabled.def
     onScrollbarsEnabledChanged: saveSettings()
     property int motionEffect: SettingsData.AnimationEffect.Standard
+    // Smooth (springBounce 0) is exactly critically damped (Anims.smoothMotion); off, its springs are 0.85-0.95 of it
+    property bool springSmoothCriticallyDamped: Spec.SPEC.springSmoothCriticallyDamped.def
+    onSpringSmoothCriticallyDampedChanged: saveSettings()
     onMotionEffectChanged: saveSettings()
     // one shadow for the windows and the frame: dms writes it into the niri layout config and the frame draws the niri
     // model (Common/ShellShadow.js). off: niri keeps its own shadow config and the frame its elevation shadow
