@@ -396,11 +396,12 @@ PanelWindow {
     readonly property real _seamOverlap: Theme.hairline(win._dpr)
     readonly property bool _disableLayer: Quickshell.env("DMS_DISABLE_LAYER") === "true" || Quickshell.env("DMS_DISABLE_LAYER") === "1"
     readonly property bool _elevationShadow: win._connectedActive && Theme.elevationEnabled && (SettingsData.barElevationEnabled || SettingsData.popoutElevationEnabled || SettingsData.modalElevationEnabled) && !win._disableLayer
-    // The frame casts its shadow only while the shell is the user's focus (see SurfaceDescriptor.holdsUserFocus), faded on
-    // niri's focus-ring/shadow curve (300 ms ease-out-quad). Only the alpha moves; at 0 the shader skips the shadow pass.
+    // frameShadowOnFocus: the frame casts its shadow only while the shell is the user's focus (see
+    // SurfaceDescriptor.holdsUserFocus), faded on niri's focus-ring/shadow curve (300 ms ease-out-quad). Only the alpha
+    // moves; at 0 the shader skips the shadow pass.
     readonly property bool _shellFocused: {
         win._surfaceRevision;
-        return SurfaceDescriptor.holdsUserFocus([win._popoutDescriptor, win._slideoutDescriptor, win._modalDescriptor, win._islandDescriptor]);
+        return !SettingsData.frameShadowOnFocus || SurfaceDescriptor.holdsUserFocus([win._popoutDescriptor, win._slideoutDescriptor, win._modalDescriptor, win._islandDescriptor]);
     }
     property real _focusFade: win._shellFocused ? 1 : 0
     Behavior on _focusFade {
@@ -1216,9 +1217,9 @@ PanelWindow {
         property real cutoutRadius: win.cutoutRadius
         property vector4d cutout: Qt.vector4d(win.cutoutLeftInset, win.cutoutTopInset, win.width - win.cutoutRightInset, win.height - win.cutoutBottomInset)
         property vector4d surfaceColor: Qt.vector4d(win._surfaceColor.r, win._surfaceColor.g, win._surfaceColor.b, win._surfaceColor.a)
-        property vector4d shadowColor: Qt.vector4d(_shadowTint.r, _shadowTint.g, _shadowTint.b, win._elevationShadow ? _shadowTint.a * (_niri ? win._focusFade : 1) : 0)
+        property vector4d shadowColor: Qt.vector4d(_shadowTint.r, _shadowTint.g, _shadowTint.b, win._elevationShadow ? _shadowTint.a * win._focusFade : 0)
         property vector4d shadowParam: _niri ? Qt.vector4d(_shadow.sigma, _shadow.spread, _shadow.offsetX, _shadow.offsetY) : Qt.vector4d(Math.max(0, _level.blurPx), Math.max(0, _level.spreadPx), Theme.elevationOffsetXFor(_level, Theme.elevationLightDirection, 4), Theme.elevationOffsetYFor(_level, Theme.elevationLightDirection, 4))
-        property vector4d ambientParam: Qt.vector4d(_ambient.blurPx, _ambient.spreadPx, win._elevationShadow && !_niri ? _ambient.alpha : 0, 0)
+        property vector4d ambientParam: Qt.vector4d(_ambient.blurPx, _ambient.spreadPx, win._elevationShadow && !_niri ? _ambient.alpha * win._focusFade : 0, 0)
         property vector4d shadowModel: Qt.vector4d(_niri ? 1 : 0, 0, 0, 0)
         property vector4d chromeRect0: win._sdfSlots[0].rect
         property vector4d chromeCorner0: win._sdfSlots[0].corner

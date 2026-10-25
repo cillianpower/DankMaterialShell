@@ -672,6 +672,8 @@ Singleton {
     property bool frameSurfacesFromTop: Spec.SPEC.frameSurfacesFromTop.def
     // the frame draws over the windows only while a surface needs it; only the bar reserves space
     property bool frameOnDemand: Spec.SPEC.frameOnDemand.def
+    // the frame casts its shadow only while a surface the user summoned is open
+    property bool frameShadowOnFocus: Spec.SPEC.frameShadowOnFocus.def
     // the minimum information: no embellishment explaining what something is (one plain icon on an osd, one line on a tile)
     property bool minimalInfo: Spec.SPEC.minimalInfo.def
     property int textRenderType: SettingsData.TextRenderType.Qt

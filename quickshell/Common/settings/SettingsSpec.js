@@ -1018,6 +1018,9 @@ var LOCAL_SPEC = {
     frameOnDemand: {
         def: false
     },
+    frameShadowOnFocus: {
+        def: false
+    },
     minimalInfo: {
         def: false
     },
