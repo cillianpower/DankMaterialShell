@@ -24,6 +24,8 @@ Singleton {
     readonly property var elevationLevel: Theme.elevationLevel2
 
     function pillRadius(thickness, style) {
+        if (Theme.flatComponents)
+            return thickness / 2;
         // compact: a flat highlight is a rectangle with small corners whatever its width or the radius setting, as on
         // macos's menu bar: a quarter of the bar's thickness at most
         if (style === "flat" && Theme.compactDensity)
@@ -37,6 +39,8 @@ Singleton {
 
     function cornerRadius(thickness, style, joined, pressProgress) {
         const resting = joined ? Math.min(segmentInnerRadius, thickness / 2) : pillRadius(thickness, style);
+        if (Theme.flatComponents)
+            return resting;
         const pressed = Math.min(resting, joined || style === "flat" ? segmentPressedInnerRadius : pressedRadius);
         return Math.max(0, resting + (pressed - resting) * Math.max(0, Math.min(1, pressProgress)));
     }

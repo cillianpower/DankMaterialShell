@@ -1220,6 +1220,11 @@ Singleton {
         return Shape.buttonRadius(width, height, sizeHeight, pressed, round, shapeScale, fixedRadius);
     }
 
+    // flat: a pill whatever the radius mode, past the fixed radius's cap
+    function pillRadius(width, height) {
+        return flatComponents ? Math.max(0, Math.min(width, height)) / 2 : fullRadius(width, height);
+    }
+
     readonly property real groupedListGap: spacingXXS
     readonly property real groupedListInnerRadius: cornerRadiusXS
     readonly property real groupedListOuterRadius: cornerRadiusL
