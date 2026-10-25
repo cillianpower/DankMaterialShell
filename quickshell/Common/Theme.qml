@@ -1303,6 +1303,7 @@ Singleton {
     readonly property int mediumBreakpoint: 768
     // "compact": controls sized for a pointer, not a finger
     readonly property bool compactDensity: typeof SettingsData !== "undefined" && SettingsData.density === "compact"
+    readonly property bool flatComponents: typeof SettingsData !== "undefined" && SettingsData.componentStyle === "flat"
     readonly property real iconButtonSize: compactDensity ? 24 : 40
     readonly property real minimumTouchTargetSize: compactDensity ? 28 : 48
     readonly property real listItemHeight: compactDensity ? 32 : 56

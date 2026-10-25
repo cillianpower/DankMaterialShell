@@ -685,6 +685,9 @@ Singleton {
     property bool clockTimeOverlay: Spec.SPEC.clockTimeOverlay.def
     // the minimum information: no embellishment explaining what something is (one plain icon on an osd, one line on a tile)
     property bool minimalInfo: Spec.SPEC.minimalInfo.def
+    // flat: three text levels, pills, hover by contrast, flat components, concentric corners and colour only for
+    // alerts, together. material: material 3 expressive
+    property string componentStyle: Spec.SPEC.componentStyle.def
     property int textRenderType: SettingsData.TextRenderType.Qt
     property int textRenderQuality: SettingsData.TextRenderQuality.Default
 

@@ -1036,6 +1036,9 @@ var LOCAL_SPEC = {
     minimalInfo: {
         def: false
     },
+    componentStyle: {
+        def: "material"
+    },
     notificationSummaryFontSize: {
         def: 0
     },
