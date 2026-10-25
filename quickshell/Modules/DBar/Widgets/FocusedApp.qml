@@ -37,12 +37,15 @@ BasePill {
     readonly property real effectiveHorizontalWidth: Math.max(0, Math.min(maxWidth, availableWidth))
     readonly property real effectiveHorizontalInnerWidth: Math.max(0, effectiveHorizontalWidth - horizontalPadding * 2)
     property var activeWindow: null
-    // focusedWindowTitleMotion: as the title changes it crossfades ("crossfade") while its width springs
+    // focusedWindowTitleMotion: as the title changes it crossfades ("crossfade") or slides in the way niri's view moved
+    // ("slide") while its width springs
     readonly property string titleMotion: isVerticalOrientation || SettingsData.reduceMotion || Theme.springMotionDisabled ? "none" : SettingsData.widgetOption("focusedWindow", widgetData, "focusedWindowTitleMotion")
     readonly property bool primarySizeAnimated: titleMotion !== "none"
     readonly property bool primarySizeMoving: contentItem?.sizeMoving ?? false
     // the last title fades out as the width springs shut (one binding: a separate "leaving" one lags it by an evaluation)
     readonly property bool titleShown: hasWindowsOnCurrentWorkspace || (primarySizeAnimated && (contentItem?.implicitWidth ?? 0) > 0)
+    readonly property int focusMotionSerial: NiriService.focusMotion.serial
+    onFocusMotionSerialChanged: contentItem?.lateMotion?.()
     property var activeDesktopEntry: null
     property bool isHovered: mouseArea.containsMouse
 
@@ -202,6 +205,9 @@ BasePill {
             }
 
             property string shownTitle: ""
+            property real titleChangedAt: 0
+            property bool titleChangeDirected: true
+            property var lastGhost: null
             // StyledText animates any opacity it is given; an animation's own writes pass it by
             property real enterOpacityFrom: 0
 
@@ -216,34 +222,98 @@ BasePill {
                 Component.onCompleted: snapTo(titleContent.targetWidth)
             }
 
+            // a focus change younger than this is the one that changed the title
+            readonly property int focusMotionWindow: 250
+
+            function takeFocusMotion() {
+                const motion = NiriService.focusMotion;
+                if (motion.serial <= consumedMotionSerial || Date.now() - motion.time > focusMotionWindow)
+                    return null;
+                consumedMotionSerial = motion.serial;
+                return motion;
+            }
+            property int consumedMotionSerial: NiriService.focusMotion.serial
+
+            function slideOffset(motion) {
+                if (root.titleMotion !== "slide" || !motion)
+                    return Qt.point(0, 0);
+                return Qt.point(motion.axis === "x" ? motion.sign * Theme.spacingL : 0, motion.axis === "y" ? motion.sign * Theme.spacingM : 0);
+            }
+
             function titleChanged() {
                 const previous = shownTitle;
                 shownTitle = titleText.text;
                 if (root.titleMotion === "none")
                     return;
+                const motion = takeFocusMotion();
+                const offset = slideOffset(motion);
+                titleChangedAt = Date.now();
+                titleChangeDirected = !!motion;
                 // the leaving title goes on from wherever it is, so a change mid-transition never jumps
-                if (previous)
-                    ghostComponent.createObject(titleClip, {
+                lastGhost = previous ? ghostComponent.createObject(titleClip, {
                     "text": previous,
                     "offsetInRow": titleText.x,
                     // the budget the bar allots next is not out yet: this is still the leaving title's
                     "maximumWidth": titleText.budget,
-                    "opacity": titleText.opacity
-                });
+                    "opacity": titleText.opacity,
+                    "startX": titleShift.x,
+                    "startY": titleShift.y,
+                    "exitX": -offset.x,
+                    "exitY": -offset.y
+                }) : null;
                 titleEnter.stop();
                 enterOpacityFrom = 0;
+                titleShift.x = offset.x;
+                titleShift.y = offset.y;
                 titleEnter.start();
             }
 
-            NumberAnimation {
+            // niri's event can land after the toplevel's: turn a fresh crossfade into the slide
+            function lateMotion() {
+                if (root.titleMotion !== "slide" || titleChangeDirected || Date.now() - titleChangedAt > Anims.smallDuration / 2)
+                    return;
+                const motion = takeFocusMotion();
+                if (!motion)
+                    return;
+                titleChangeDirected = true;
+                const offset = slideOffset(motion);
+                const remaining = 1 - titleText.opacity;
+                titleEnter.stop();
+                enterOpacityFrom = titleText.opacity;
+                titleShift.x = offset.x * remaining;
+                titleShift.y = offset.y * remaining;
+                titleEnter.start();
+                lastGhost?.leaveTo(-offset.x, -offset.y);
+            }
+
+            ParallelAnimation {
                 id: titleEnter
-                target: titleText
-                property: "opacity"
-                from: titleContent.enterOpacityFrom
-                to: 1
-                duration: Anims.smallDuration
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Anims.smoothSpatial
+
+                NumberAnimation {
+                    target: titleText
+                    property: "opacity"
+                    from: titleContent.enterOpacityFrom
+                    to: 1
+                    duration: Anims.smallDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Anims.smoothSpatial
+                }
+                NumberAnimation {
+                    target: titleShift
+                    property: "x"
+                    to: 0
+                    duration: Anims.smallDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Anims.smoothSpatial
+                }
+                NumberAnimation {
+                    target: titleShift
+                    property: "y"
+                    to: 0
+                    duration: Anims.smallDuration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Anims.smoothSpatial
+                }
             }
 
             Component {
@@ -253,6 +323,16 @@ BasePill {
                     id: ghost
                     required property real offsetInRow
                     required property real maximumWidth
+                    property real startX: 0
+                    property real startY: 0
+                    property real exitX: 0
+                    property real exitY: 0
+
+                    function leaveTo(x, y) {
+                        exitX = x;
+                        exitY = y;
+                        leave.restart();
+                    }
 
                     // where the centred row held it
                     x: (parent.width - offsetInRow - width) / 2 + offsetInRow
@@ -264,13 +344,41 @@ BasePill {
                     elide: implicitWidth > maximumWidth ? titleText.elide : Text.ElideNone
                     wrapMode: Text.NoWrap
                     maximumLineCount: 1
+                    transform: Translate {
+                        id: ghostShift
+                        x: ghost.startX
+                        y: ghost.startY
+                    }
 
-                    NumberAnimation on opacity {
-                        to: 0
-                        duration: Anims.smallDuration
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Anims.smoothSpatial
+                    ParallelAnimation {
+                        id: leave
+                        running: true
                         onFinished: ghost.destroy()
+
+                        NumberAnimation {
+                            target: ghost
+                            property: "opacity"
+                            to: 0
+                            duration: Anims.smallDuration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anims.smoothSpatial
+                        }
+                        NumberAnimation {
+                            target: ghostShift
+                            property: "x"
+                            to: ghost.exitX
+                            duration: Anims.smallDuration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anims.smoothSpatial
+                        }
+                        NumberAnimation {
+                            target: ghostShift
+                            property: "y"
+                            to: ghost.exitY
+                            duration: Anims.smallDuration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anims.smoothSpatial
+                        }
                     }
                 }
             }
@@ -399,6 +507,9 @@ BasePill {
                         }
                         width: Math.min(implicitWidth, budget)
                         visible: text.length > 0
+                        transform: Translate {
+                            id: titleShift
+                        }
                         onTextChanged: titleChanged()
                     }
                 }
