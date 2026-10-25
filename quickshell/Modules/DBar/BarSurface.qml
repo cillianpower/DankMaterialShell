@@ -39,7 +39,7 @@ Item {
     readonly property real crossWing: alongWings ? 0 : wing
     readonly property real rt: {
         if (frameShapesBar)
-            return Theme.windowRadius;
+            return Theme.frameRadius;
         if (barConfig?.squareCorners ?? false)
             return 0;
         if (barWindow.flattenForMaximizedWindow && barWindow.hasMaximizedToplevel)

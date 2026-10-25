@@ -5143,14 +5143,17 @@
       "appearance",
       "bar",
       "border",
+      "corner",
+      "follow",
       "frame",
+      "niri",
       "panel",
-      "size",
+      "radius",
+      "rounding",
       "statusbar",
       "taskbar",
-      "thickness",
       "topbar",
-      "width"
+      "window"
     ],
     "parentLabel": "Bar",
     "icon": "border_outer",
@@ -5433,6 +5436,31 @@
     "parentLabel": "Bar",
     "description": "Opacity",
     "conditionKey": "islandEnabled"
+  },
+  {
+    "section": "frameRounding",
+    "label": "Override window radius",
+    "tabIndex": 6,
+    "category": "Appearance",
+    "keywords": [
+      "appearance",
+      "bar",
+      "border",
+      "corner",
+      "follow",
+      "frame",
+      "niri",
+      "override",
+      "panel",
+      "radius",
+      "rounding",
+      "statusbar",
+      "taskbar",
+      "topbar",
+      "window"
+    ],
+    "parentLabel": "Bar",
+    "conditionKey": "frameEnabled"
   },
   {
     "section": "islandPalette",

@@ -570,7 +570,7 @@ PanelWindow {
     readonly property int cutoutHeight: Math.max(0, win._windowRegionHeight - win.cutoutTopInset - win.cutoutBottomInset)
     readonly property int cutoutRadius: {
         // on demand only the bar is drawn: a straight strip, its corners square
-        const requested = (SettingsData.frameOnDemand ?? false) ? 0 : win._regionInt(Theme.windowRadius);
+        const requested = (SettingsData.frameOnDemand ?? false) ? 0 : win._regionInt(Theme.frameRadius);
         const maxRadius = Math.floor(Math.min(win.cutoutWidth, win.cutoutHeight) / 2);
         return Math.max(0, Math.min(requested, maxRadius));
     }

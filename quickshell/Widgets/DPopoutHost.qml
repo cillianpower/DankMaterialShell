@@ -703,7 +703,7 @@ Item {
         if (!root.frameOwnsConnectedChrome)
             return 0;
         const ft = SettingsData.frameThickness;
-        const fr = Theme.windowRadius;
+        const fr = Theme.frameRadius;
         const ccr = Theme.connectedCornerRadius;
         return Math.max(ft * 4, ft + ccr * 2, fr);
     }

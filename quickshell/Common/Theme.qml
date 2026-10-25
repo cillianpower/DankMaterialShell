@@ -1027,11 +1027,10 @@ Singleton {
         "offsetY": SettingsData.shellShadowOffsetY,
         "color": SettingsData.shellShadowColor
     })
-    // the frame's corners are niri's window corners: one radius (windowRadius, which NiriService writes as geometry-corner-radius)
     readonly property real connectedCornerRadius: {
         if (typeof SettingsData === "undefined")
             return 12;
-        return windowRadius;
+        return FrameTransitionState.effectiveConnectedFrameModeActive ? frameRadius : windowRadius;
     }
     readonly property color connectedSurfaceColor: {
         if (typeof SettingsData === "undefined")
@@ -1201,6 +1200,8 @@ Singleton {
         return override === undefined ? -1 : override;
     }
     readonly property real windowRadius: compositorRadiusOverride >= 0 ? compositorRadiusOverride : cornerRadiusL
+    // frameRounding -1: the frame's corners are the window corners
+    readonly property real frameRadius: typeof SettingsData === "undefined" || SettingsData.frameRounding < 0 ? windowRadius : SettingsData.frameRounding
 
     function scaledRadius(radius, limit) {
         return Shape.scaledRadius(radius, limit, shapeScale, fixedRadius);

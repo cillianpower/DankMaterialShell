@@ -45,6 +45,21 @@ Item {
             collapsible: true
             visible: SettingsData.frameEnabled
 
+            // off (-1), the frame's corners follow the window radius
+            SettingsToggleSliderRow {
+                settingKey: "frameRounding"
+                tags: ["frame", "border", "rounding", "radius", "corner", "window", "follow", "niri"]
+                text: I18n.tr("Override window radius", "toggle: the frame's corner radius stops following the window radius")
+                checked: SettingsData.frameRounding >= 0
+                value: Math.round(Theme.frameRadius)
+                minimum: 0
+                maximum: 100
+                step: 1
+                unit: "px"
+                onToggled: checked => SettingsData.set("frameRounding", checked ? Math.round(Theme.windowRadius) : -1)
+                onSliderDragFinished: v => SettingsData.set("frameRounding", v)
+            }
+
             SettingsSliderRow {
                 settingKey: "frameThickness"
                 tags: ["frame", "border", "thickness", "size", "width"]
