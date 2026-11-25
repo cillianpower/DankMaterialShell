@@ -17,7 +17,7 @@ Rectangle {
 
     height: Theme.buttonHeightXS
     width: iconOnly ? height : content.implicitWidth + Theme.spacingM * 2
-    radius: layer.pressed ? Math.min(Theme.cornerRadiusS, height / 2) : restRadius
+    radius: Theme.flatComponents ? Math.min(Theme.windowRadius, height / 2) : layer.pressed ? Math.min(Theme.cornerRadiusS, height / 2) : restRadius
     color: pinned ? Theme.secondaryContainer : "transparent"
     border.width: pinned ? 0 : Theme.outlineWidth
     border.color: Theme.outlineVariant
@@ -39,7 +39,7 @@ Rectangle {
     }
 
     Behavior on radius {
-        enabled: CcMetrics.animationsEnabled
+        enabled: !Theme.flatComponents && CcMetrics.animationsEnabled
         NumberAnimation {
             duration: Theme.expressiveDurations.expressiveFastSpatial
             easing.type: Easing.BezierSpline

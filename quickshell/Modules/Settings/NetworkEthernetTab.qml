@@ -305,7 +305,7 @@ Item {
                                 width: parent.width
                                 height: 48
                                 radius: Theme.cornerRadius
-                                color: modelData.isActive ? Theme.selectedContainer : wiredMouseArea.containsMouse ? Theme.primaryHoverLight : SettingsMetrics.controlColor
+                                color: Theme.flatComponents ? (modelData.isActive ? Theme.selectedContainer : SettingsMetrics.controlColor) : modelData.isActive ? Theme.selectedContainer : wiredMouseArea.containsMouse ? Theme.primaryHoverLight : SettingsMetrics.controlColor
                                 border.width: Theme.layerOutlineWidth
                                 border.color: Theme.outlineMedium
 
@@ -342,12 +342,16 @@ Item {
                                     }
                                 }
 
-                                MouseArea {
+                                StateLayer {
                                     id: wiredMouseArea
 
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
+                                    acceptedButtons: Qt.LeftButton
+                                    disabled: !wiredMouseArea.enabled || !Theme.flatComponents
+                                    enableRipple: false
+                                    stateColor: Theme.flatComponents ? (modelData.isActive ? Theme.onSelectedContainer : Theme.surfaceText) : "transparent"
                                     onClicked: {
                                         if (!modelData.isActive) {
                                             NetworkService.connectToSpecificWiredConfig(modelData.uuid);

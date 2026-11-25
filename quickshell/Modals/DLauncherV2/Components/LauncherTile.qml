@@ -52,9 +52,9 @@ Rectangle {
 
     readonly property int computedIconSize: Math.min(root.maxIconSize, Math.max(root.minIconSize, width * root.iconSizeRatio))
 
-    radius: Theme.cornerRadiusL
-    color: externalHighlight ? "transparent" : isSelected ? Theme.selectedContainer : Theme.foregroundColor(Theme.cardSurface, Theme.isFloatingWindow(root))
-    border.width: externalHighlight ? 0 : Theme.layerOutlineWidth
+    radius: Theme.flatComponents ? Math.min(Theme.windowRadius, height / 2) : Theme.cornerRadiusL
+    color: externalHighlight ? "transparent" : isSelected ? Theme.selectedContainer : Theme.flatComponents ? "transparent" : Theme.foregroundColor(Theme.cardSurface, Theme.isFloatingWindow(root))
+    border.width: Theme.flatComponents || externalHighlight ? 0 : Theme.layerOutlineWidth
     border.color: Theme.outlineMedium
     opacity: (root.item?.type === "dmenu" && root.item?.data?.nonSelectable) ? 0.5 : 1.0
 

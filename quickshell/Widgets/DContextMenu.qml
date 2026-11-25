@@ -310,7 +310,7 @@ Item {
                 }
                 width: root.effectiveMenuWidth
                 height: root.effectiveMenuHeight
-                color: Theme.readableSurface
+                color: Theme.flatComponents ? Theme.readableSurfaceHigh : Theme.readableSurface
                 radius: Theme.menuRadius
                 border.color: BlurService.borderColor
                 border.width: BlurService.borderWidth

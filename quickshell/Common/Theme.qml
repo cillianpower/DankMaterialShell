@@ -1180,10 +1180,10 @@ Singleton {
     readonly property real notificationCardPadding: spacingM
     readonly property real notificationCardPaddingCompact: spacingS
 
-    // flat: hover and press change the content, not the background; keyboard focus keeps its fill
-    readonly property real stateLayerHover: flatComponents ? 0 : 0.08
+    // Reveal hover and press bounds even when the control's content is already white.
+    readonly property real stateLayerHover: 0.08
     readonly property real stateLayerFocus: 0.12
-    readonly property real stateLayerPressed: flatComponents ? 0 : 0.12
+    readonly property real stateLayerPressed: 0.12
     readonly property real stateLayerDrag: 0.16
 
     readonly property int popoutAnimationDuration: {

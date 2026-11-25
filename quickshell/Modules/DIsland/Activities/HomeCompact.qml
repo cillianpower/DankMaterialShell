@@ -577,7 +577,8 @@ Item {
         readonly property string levelReserve: group.isVolume ? String(AudioService.sinkMaxVolume) : "100"
         // the menu bar face: lit while its page is open (IslandController.litFaceGroup)
         readonly property bool lit: root.controller.litFaceGroup === group.groupId
-        readonly property bool raised: groupArea.containsMouse || group.lit
+        readonly property bool hovered: groupArea.containsMouse || clockHover.hovered
+        readonly property bool raised: group.hovered || group.lit
 
         function lift(base) {
             return Theme.stateContent(base, group.raised, groupArea.pressed);
@@ -609,13 +610,24 @@ Item {
             height: group.vertical ? parent.height + group.leadPad + group.trailPad : root.height
         }
 
+        // Observe the closed clock without taking its click from the island's outer handler.
+        Item {
+            anchors.fill: groupArea
+
+            HoverHandler {
+                id: clockHover
+                enabled: Theme.flatComponents && group.isClock && !groupArea.enabled
+                blocking: false
+            }
+        }
+
         Rectangle {
             anchors.centerIn: parent
             width: group.vertical ? root.slotSize : parent.width + Theme.spacingS
             height: group.vertical ? parent.height + Theme.spacingXS : root.slotSize
             radius: group.vertical ? Theme.cornerRadius : Theme.fullRadius(width, height)
-            color: group.lit ? Theme.withAlpha(Theme.surfaceText, 0.16) : groupArea.containsMouse ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent"
-            visible: group.lit || !group.isClock && !group.isTray && (group.vertical || !group.usesBattery)
+            color: group.lit ? Theme.withAlpha(Theme.surfaceText, 0.16) : group.hovered ? Theme.withAlpha(Theme.surfaceText, Theme.stateLayerHover) : "transparent"
+            visible: group.lit || !group.isTray && (Theme.flatComponents || !group.isClock && (group.vertical || !group.usesBattery))
         }
 
         Grid {

@@ -96,7 +96,7 @@ Item {
                                 width: parent.width
                                 height: 56
                                 radius: Theme.cornerRadius
-                                color: isConnected ? Theme.selectedContainer : modemMouseArea.containsMouse ? Theme.primaryHoverLight : SettingsMetrics.controlColor
+                                color: Theme.flatComponents ? (isConnected ? Theme.selectedContainer : SettingsMetrics.controlColor) : isConnected ? Theme.selectedContainer : modemMouseArea.containsMouse ? Theme.primaryHoverLight : SettingsMetrics.controlColor
                                 border.width: Theme.layerOutlineWidth
                                 border.color: Theme.outlineMedium
 
@@ -167,12 +167,16 @@ Item {
                                     }
                                 }
 
-                                MouseArea {
+                                StateLayer {
                                     id: modemMouseArea
                                     anchors.fill: parent
                                     anchors.rightMargin: modemActions.width + Theme.spacingM
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
+                                    acceptedButtons: Qt.LeftButton
+                                    disabled: !modemMouseArea.enabled || !Theme.flatComponents
+                                    enableRipple: false
+                                    stateColor: Theme.flatComponents ? (modemDelegate.isConnected ? Theme.onSelectedContainer : Theme.surfaceText) : "transparent"
                                     onClicked: {
                                         if (modemDelegate.isConnected)
                                             NetworkService.disconnectCellularDevice(modelData.name);
@@ -212,7 +216,7 @@ Item {
                             width: parent.width
                             height: 56
                             radius: Theme.cornerRadius
-                            color: isActive ? Theme.selectedContainer : profileMouseArea.containsMouse ? Theme.primaryHoverLight : SettingsMetrics.controlColor
+                            color: Theme.flatComponents ? (isActive ? Theme.selectedContainer : SettingsMetrics.controlColor) : isActive ? Theme.selectedContainer : profileMouseArea.containsMouse ? Theme.primaryHoverLight : SettingsMetrics.controlColor
                             border.color: Theme.outlineMedium
                             border.width: Theme.layerOutlineWidth
 
@@ -273,12 +277,16 @@ Item {
                                 }
                             }
 
-                            MouseArea {
+                            StateLayer {
                                 id: profileMouseArea
                                 anchors.fill: parent
                                 anchors.rightMargin: profileAction.width + Theme.spacingS
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton
+                                disabled: !profileMouseArea.enabled || !Theme.flatComponents
+                                enableRipple: false
+                                stateColor: Theme.flatComponents ? (profileDelegate.isActive ? Theme.onSelectedContainer : Theme.surfaceText) : "transparent"
                                 onClicked: {
                                     if (!profileDelegate.isActive)
                                         NetworkService.connectToSpecificCellularConfig(modelData.uuid);

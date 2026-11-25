@@ -337,13 +337,13 @@ Item {
                         z: -1
                         visible: delegateRoot.visible
                         opacity: delegateRoot.opacity
-                        color: Theme.foregroundColor(Theme.cardSurface, Theme.isFloatingWindow(root))
-                        border.width: Theme.layerOutlineWidth
+                        color: Theme.flatComponents ? "transparent" : Theme.foregroundColor(Theme.cardSurface, Theme.isFloatingWindow(root))
+                        border.width: Theme.flatComponents ? 0 : Theme.layerOutlineWidth
                         border.color: Theme.outlineMedium
-                        radius: Theme.groupedListInnerRadius
-                        topLeftRadius: delegateRoot.modelData?.firstInGroup ? Theme.groupedListOuterRadius : radius
+                        radius: Theme.flatComponents ? Math.min(Theme.windowRadius, height / 2) : Theme.groupedListInnerRadius
+                        topLeftRadius: Theme.flatComponents ? radius : delegateRoot.modelData?.firstInGroup ? Theme.groupedListOuterRadius : radius
                         topRightRadius: topLeftRadius
-                        bottomLeftRadius: delegateRoot.modelData?.lastInGroup ? Theme.groupedListOuterRadius : radius
+                        bottomLeftRadius: Theme.flatComponents ? radius : delegateRoot.modelData?.lastInGroup ? Theme.groupedListOuterRadius : radius
                         bottomRightRadius: bottomLeftRadius
                     }
                 }
@@ -428,10 +428,10 @@ Item {
                                     z: -1
                                     visible: delegateRoot.visible
                                     opacity: delegateRoot.opacity
-                                    color: Theme.foregroundColor(Theme.cardSurface, Theme.isFloatingWindow(root))
-                                    border.width: Theme.layerOutlineWidth
+                                    color: Theme.flatComponents ? "transparent" : Theme.foregroundColor(Theme.cardSurface, Theme.isFloatingWindow(root))
+                                    border.width: Theme.flatComponents ? 0 : Theme.layerOutlineWidth
                                     border.color: Theme.outlineMedium
-                                    radius: Theme.cornerRadiusL
+                                    radius: Theme.flatComponents ? Math.min(Theme.windowRadius, height / 2) : Theme.cornerRadiusL
                                 }
 
                                 Loader {
